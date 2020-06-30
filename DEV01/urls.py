@@ -26,6 +26,7 @@ urlpatterns = [
     # b.可以使用<url类型转化器:路径参数名>
     # c.int、path、uuid、slug等等
     path('index3/', IndexPage.as_view()),
+    path('projects/', InterfacesPage.as_view()),
     path('projects/<int:pk>/', InterfacesPage.as_view()),
 
 ]
