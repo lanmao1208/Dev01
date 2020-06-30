@@ -46,4 +46,10 @@ class Interfaces(models.Model):
         verbose_name_plural = verbose_name
 
     def __str__(self):
-        return "<{}>".format(self.name)
+        interfaces_json = {
+            "name": self.name,
+            "projects": self.projects,
+            "tester": self.tester,
+            "desc": self.desc
+        }
+        return "{}".format(interfaces_json)

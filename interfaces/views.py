@@ -22,17 +22,24 @@ class InterfacesPage(View):
     """
 
     def get(self, request, pk = None):
-        # 获取所有查询对象
+        # 获取查询对象
+        result = {"data":{}}
         try:
+            # pk存在则为指定查询对象
             if pk:
-                res = Interfaces.objects.filter(id=pk)
+                res = Interfaces.objects.values().filter(id=pk)
+            # 不存在则为查询所有对象
             else:
-                res = Interfaces.objects.all()
-            res = list(res)
-            print(res)
-            return HttpResponse("{}".format(res))
+                res = Interfaces.objects.values().all()
+            result["data"] = list(res)
+            result["msg"] = "查询成功"
+            result["code"] = 0
+            print(result)
+            return JsonResponse(result, safe=False)
         except Exception as e:
-            return HttpResponse("<h2>GET请求：该查询对象不存在</h2>")
+            result["msg"] = "查询失败"
+            result["code"] = 1
+            return JsonResponse(result)
 
         # 关联查询
         # 通过从表信息获取父表信息
@@ -52,27 +59,58 @@ class InterfacesPage(View):
         # Interfaces.objects.all().order_by('-name')
 
 
-    def post(self, request, pk = None):
-        times = datetime.datetime
+    def post(self, request):
+        # json格式传入创建需要的参数
+        create_data = json.loads(request.body)
+        result = {}
         try:
-            Interfaces.objects.create(name="django作业2{}".format(times),leader="负责人2{}".format(times),
-                 tester="测试人员2{}".format(times),programmer="开发人员2{}".format(times))
-            return JsonResponse("<h2>POST请求：创建成功</h2>")
+            Interfaces.objects.create(**create_data)
+            result["msg"] = "创建成功"
+            result["code"] = 0
+            return JsonResponse(result)
         except Exception as e:
-            return JsonResponse("<h2>POST请求：创建失败</h2>")
+            result["msg"] = "创建失败"
+            result["code"] = 1
+            return JsonResponse(result)
 
     def put(self, request, pk = None):
+        # 更新id为pk，更新内容通过json传递
+        updata_data = json.loads(request.body)
+        result = {}
         try:
             if pk:
-                Interfaces.objects.filter(id = pk).update(name = "修改后id2的name值")
-                return JsonResponse("<h2>PUT请求：更新成功{}</h2>".format(Interfaces.objects.get(id=pk)), content_type='application/json', status=200)
+                res = Interfaces.objects.get(id = pk)
+                name = updata_data.get("name",None)
+                projects_id = updata_data.get("projects_id", None)
+                tester = updata_data.get("tester", None)
+                desc = updata_data.get("desc", None)
+                if name:
+                    res.name = name
+                if projects_id:
+                    res.projects_id = projects_id
+                if tester:
+                    res.tester = tester
+                if desc:
+                    res.desc = desc
+                res.save()
+                result["msg"] = "更新成功"
+                result["code"] = 0
+                return JsonResponse(result)
         except Exception as e:
-            return JsonResponse("<h2>PUT请求：更新失败，不存在该对象</h2>")
+            result["msg"] = "更新失败"
+            result["code"] = 1
+            return JsonResponse(result)
 
     def delete(self, request, pk = None):
+        # pk为指定删除对象的id
+        result = {}
         try:
             if pk:
-                res = Interfaces.objects.filter(id = pk).delete()
-                return JsonResponse("<h2>DELETE请求：删除成功</h2>")
+                Interfaces.objects.filter(id = pk).delete()
+                result["msg"] = "删除成功"
+                result["code"] = 0
+                return JsonResponse(result)
         except Exception as e:
-            return JsonResponse("<h2>DELETE请求：删除失败，不存在该对象</h2>")
+            result["msg"] = "删除失败"
+            result["code"] = 1
+            return JsonResponse(result)
