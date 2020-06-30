@@ -16,6 +16,7 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 from projects.views import index_page, index_page2, IndexPage
+from interfaces.views import InterfacesPage
 
 urlpatterns = [
     path('index/', index_page),
@@ -24,7 +25,7 @@ urlpatterns = [
     # a.path函数的第二个参数为类视图名.as_view()
     # b.可以使用<url类型转化器:路径参数名>
     # c.int、path、uuid、slug等等
-    # path('index3/<int:pk>/', IndexPage.as_view()),
-    path('projects/<int:pk>/', IndexPage.as_view()),
+    path('index3/', IndexPage.as_view()),
+    path('projects/<int:pk>/', InterfacesPage.as_view()),
 
 ]
