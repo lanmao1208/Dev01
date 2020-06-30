@@ -9,6 +9,7 @@ from django.views import View
 from django.shortcuts import render
 from projects.models import Projects
 from django.db import connections
+from interfaces import views
 
 def index_page(request):
     """
@@ -58,6 +59,7 @@ class IndexPage(View):
         res = Projects.objects.filter(id__lte=4)
         return HttpResponse("<h2>GET请求：查询成功{}</h2>".format(res))
 
+
     def post(self, request):
         # a.可以使用request.POST方法，去获取application/x-www-urlencoded类型的参数
         # b.可以使用request.body方法，去获取application/json类型的参数
@@ -96,3 +98,4 @@ class IndexPage(View):
         # 第二种删除方法
         res2 = Projects.objects.filter(id = 2).delete()
         return HttpResponse("<h2>DELETE请求：删除成功</h2>")
+
