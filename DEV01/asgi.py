@@ -1,5 +1,5 @@
 """
-ASGI config for DEV01 project.
+ASGI config for DEV01 projects.
 
 It exposes the ASGI callable as a module-level variable named ``application``.
 

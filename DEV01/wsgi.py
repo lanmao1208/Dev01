@@ -1,5 +1,5 @@
 """
-WSGI config for DEV01 project.
+WSGI config for DEV01 projects.
 
 It exposes the WSGI callable as a module-level variable named ``application``.
 
