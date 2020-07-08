@@ -15,16 +15,14 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
-from projects.views import IndexPage
-from interfaces.views import InterfacesPage
+from django.urls import path, include
 
 urlpatterns = [
     # 类视图定义路由
     # a.path函数的第二个参数为类视图名.as_view()
     # b.可以使用<url类型转化器:路径参数名>
     # c.int、path、uuid、slug等等
-    path('index3/', IndexPage.as_view()),
-    path('projects/', InterfacesPage.as_view()),
-    path('projects/<int:pk>/', InterfacesPage.as_view()),
+    path('', include('projects.urls')),
+    path('', include('interfaces.urls')),
 
 ]

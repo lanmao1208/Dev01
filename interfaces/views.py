@@ -1,15 +1,10 @@
-from django.shortcuts import render
-
 import json
-
-# 0、导入HttpResponse
-import datetime
-from django.http import HttpResponse, JsonResponse
+from django.http import  JsonResponse
 from django.views import View
 from django.shortcuts import render
 from interfaces.models import Interfaces
 from django.db import connections
-from django.db.models import Q
+from .serializers import InterfaceSerializer
 
 class InterfacesPage(View):
     """
@@ -27,15 +22,15 @@ class InterfacesPage(View):
         try:
             # pk存在则为指定查询对象
             if pk:
-                res = Interfaces.objects.values().filter(id=pk)
+                res = Interfaces.objects.filter(id=pk)
             # 不存在则为查询所有对象
             else:
-                res = Interfaces.objects.values().all()
-            result["data"] = list(res)
+                res = Interfaces.objects.all()
+            one_obj = InterfaceSerializer(instance=res,many=True)
+            result["data"] = one_obj.data
             result["msg"] = "查询成功"
             result["code"] = 0
-            print(result)
-            return JsonResponse(result, safe=False)
+            return JsonResponse(result,safe=False)
         except Exception as e:
             result["msg"] = "查询失败"
             result["code"] = 1
@@ -61,47 +56,73 @@ class InterfacesPage(View):
 
     def post(self, request):
         # json格式传入创建需要的参数
-        create_data = json.loads(request.body)
+        create_data = request.body
         result = {}
+        # 判断传入参数是否为json或者字典格式
         try:
-            Interfaces.objects.create(**create_data)
-            result["msg"] = "创建成功"
-            result["code"] = 0
-            return JsonResponse(result)
+            create_json_data = json.loads(create_data)
         except Exception as e:
-            result["msg"] = "创建失败"
+            result["msg"] = "参数错误"
             result["code"] = 1
-            return JsonResponse(result)
+            return JsonResponse(result,status=400)
 
-    def put(self, request, pk = None):
+        rsf = InterfaceSerializer(data=create_json_data)
+        # 效验数据是否符合接口要求的参数设置
+        try:
+            rsf.is_valid(raise_exception=True)
+        except Exception as e:
+            result["msg"] = "参数错误"
+            result["code"] = 1
+            result.update(rsf.errors)
+            return JsonResponse(result,status=400)
+        # 效验通过后进行创建
+        Interfaces.objects.create(**rsf.validated_data)
+        result.update(rsf.validated_data)
+        result["msg"] = "创建成功"
+        result["code"] = 0
+        return JsonResponse(result, safe=False,status=200)
+
+    def put(self, request, pk):
         # 更新id为pk，更新内容通过json传递
-        updata_data = json.loads(request.body)
+        # json格式传入创建需要的参数
+        updata_data = request.body
         result = {}
+        # 判断传入参数是否为json或者字典格式
         try:
-            if pk:
-                res = Interfaces.objects.get(id = pk)
-                res.name = updata_data.get("name",None) or res.name
-                res.projects_id = updata_data.get("projects_id", None) or res.projects_id
-                res.tester = updata_data.get("tester", None) or res.tester
-                res.desc = updata_data.get("desc", None) or res.desc
-                res.save()
-                result["msg"] = "更新成功"
-                result["code"] = 0
-                return JsonResponse(result)
+            updata_json_data = json.loads(updata_data)
         except Exception as e:
-            result["msg"] = "更新失败"
+            result["msg"] = "参数错误"
             result["code"] = 1
-            return JsonResponse(result)
+            return JsonResponse(result,status=400)
 
-    def delete(self, request, pk = None):
+        rsf = InterfaceSerializer(data=updata_json_data)
+        # 效验数据是否符合接口要求的参数设置
+        try:
+            rsf.is_valid(raise_exception=True)
+        except Exception as e:
+            result["msg"] = "参数错误"
+            result["code"] = 1
+            result.update(rsf.errors)
+            return JsonResponse(result, status=400)
+        # 效验通过后进行更新
+        res = Interfaces.objects.get(id = pk)
+        res.name = rsf.validated_data.get("name",None) or res.name
+        res.projects_id = rsf.validated_data.get("projects_id", None) or res.projects_id
+        res.tester = rsf.validated_data.get("tester", None) or res.tester
+        res.desc = rsf.validated_data.get("desc", None) or res.desc
+        res.save()
+        result["msg"] = "更新成功"
+        result["code"] = 0
+        return JsonResponse(result,status=200)
+
+    def delete(self, request, pk):
         # pk为指定删除对象的id
         result = {}
         try:
-            if pk:
-                Interfaces.objects.filter(id = pk).delete()
-                result["msg"] = "删除成功"
-                result["code"] = 0
-                return JsonResponse(result)
+            Interfaces.objects.filter(id = pk).delete()
+            result["msg"] = "删除成功"
+            result["code"] = 0
+            return JsonResponse(result)
         except Exception as e:
             result["msg"] = "删除失败"
             result["code"] = 1
