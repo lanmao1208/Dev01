@@ -11,26 +11,6 @@ from projects.models import Projects
 from django.db import connections
 from interfaces import views
 
-def index_page(request):
-    """
-    视图函数
-    1、第一个参数为HttpRequest对象或者HttpRequest子类的对象，无需手动传递
-    2、一般会使用request
-    3、一定要返回HttpResponse对象或者HttpResponse子类对象
-    :param request:
-    :return:
-    """
-    if request.method == "GET":
-        return HttpResponse("<h2>GET请求！</h2>")
-    elif request.method == "POST":
-        return HttpResponse("<h2>POST请求！</h2>")
-    elif request.method == "PUT":
-        return HttpResponse("<h2>POST请求！</h2>")
-
-
-def index_page2(request):
-    return HttpResponse("<h2>Hello！</h2>")
-
 
 class IndexPage(View):
     """

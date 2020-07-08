@@ -15,12 +15,10 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
-from projects.views import index_page, index_page2, IndexPage
+from projects.views import IndexPage
 from interfaces.views import InterfacesPage
 
 urlpatterns = [
-    path('index/', index_page),
-    path('index2/', index_page2),
     # 类视图定义路由
     # a.path函数的第二个参数为类视图名.as_view()
     # b.可以使用<url类型转化器:路径参数名>
