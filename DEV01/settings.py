@@ -38,10 +38,10 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
-    'projects',
-    'interfaces',
+    'projects.apps.ProjectConfig',
+    'interfaces.apps.InterfacesConfig',
 ]
-
+# 暂时屏蔽效验功能
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',

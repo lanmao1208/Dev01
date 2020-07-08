@@ -23,6 +23,7 @@ class InterfacesPage(View):
         b.instance参数可以传查询集（多条记录），many=True
         c.可以ProjectsSerializer序列化器对象，调用data属性，可以将模型类对象转化为Python中的数据类型
         d.如果未传递many=True参数，那么序列化器对象.data，返回字典，否则返回一个嵌套字典的列表
+        e.fitter出来是查询集  get出来是模型类对象
         :param request:
         :param pk:
         :return:
@@ -42,7 +43,7 @@ class InterfacesPage(View):
             result["code"] = 0
             return JsonResponse(result,safe=False,status=201)
         except Exception as e:
-            result["msg"] = "查询失败"
+            result["msg"] = "查询失败，指定ID不存在"
             result["code"] = 1
             return JsonResponse(result,status=400)
 

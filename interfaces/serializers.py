@@ -28,6 +28,6 @@ class InterfaceSerializer(serializers.Serializer):
     # tester = serializers.CharField(max_length=200, label='测试人员', help_text='测试人员', write_only=True, read_only=True)
     desc = serializers.CharField(max_length=200, label='简要描述', help_text='简要描述',write_only=True,
                                    error_messages={"required": "该字段必传1", "max_length": "长度不能操作200个字节"})
-    # # 输出时间
-    # creat_time = serializers.DateTimeField(format='%Y-%M-%D %H:%M:%S',required=True,read_only=True)
-    # updata_time = serializers.DateTimeField(format='%Y-%M-%D %H:%M:%S',required=True,read_only=True)
+    # 输出时间
+    creat_time = serializers.DateTimeField(format='%Y-%m-%d %H:%M:%S',required=False,read_only=True)
+    updata_time = serializers.DateTimeField(format='%Y-%m-%d %H:%M:%S',required=False,read_only=True)

@@ -39,11 +39,11 @@ class Interfaces(models.Model):
     name = models.CharField(max_length=200, verbose_name='接口名称', help_text='接口名称', unique=True)
     # 外键字段名称
     projects = models.ForeignKey("projects.Projects",on_delete=models.CASCADE,verbose_name="所属项目ID",help_text="所属项目ID")
-    tester = models.CharField(max_length=50, verbose_name='测试人员', help_text='测试人员',writer_only = True)
+    tester = models.CharField(max_length=50, verbose_name='测试人员', help_text='测试人员')
     desc = models.CharField(verbose_name='简要描述',max_length=200, blank=True, default='xxx简介', null=True)
-    # # 输出时间
-    # creat_time = models.DateTimeField(format='%Y-%M-%D %H:%M:%S', required=True, read_only=True)
-    # updata_time = models.DateTimeField(format='%Y-%M-%D %H:%M:%S', required=True, read_only=True)
+    # 输出时间
+    creat_time = models.DateTimeField(auto_now_add=True)
+    updata_time = models.DateTimeField(auto_now=True)
 
 
     class Meta:
