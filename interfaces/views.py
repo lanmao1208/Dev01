@@ -80,18 +80,10 @@ class InterfacesPage(View):
         try:
             if pk:
                 res = Interfaces.objects.get(id = pk)
-                name = updata_data.get("name",None)
-                projects_id = updata_data.get("projects_id", None)
-                tester = updata_data.get("tester", None)
-                desc = updata_data.get("desc", None)
-                if name:
-                    res.name = name
-                if projects_id:
-                    res.projects_id = projects_id
-                if tester:
-                    res.tester = tester
-                if desc:
-                    res.desc = desc
+                res.name = updata_data.get("name",None) or res.name
+                res.projects_id = updata_data.get("projects_id", None) or res.projects_id
+                res.tester = updata_data.get("tester", None) or res.tester
+                res.desc = updata_data.get("desc", None) or res.desc
                 res.save()
                 result["msg"] = "更新成功"
                 result["code"] = 0
