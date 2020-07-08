@@ -82,6 +82,9 @@ class InterfacesPage(View):
         # c.调用序列化器对象.is_valid()方法，如果校验成功，返回True，否则返回False
         # d.必须调用is_valid()方法之后，才能使用.errors属性去获取报错信息，相当于一个字典
         # e.必须调用is_valid()方法之后，才能使用.validated_data属性去获取校验通过信息，相当于一个字典
+        # data传输字典或者字典嵌套列表，instance传输查询集对象或者其他类对象
+        # 用于序列化时，将模型类对象传入instance参数(输出/打印)
+        # 用于反序列化时，将要被反序列化的数据传入data参数(输入/写入)
         rsf = InterfaceSerializer(data=create_json_data)
         # 效验数据是否符合接口要求的参数设置
         try:
