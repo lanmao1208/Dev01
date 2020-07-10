@@ -32,7 +32,6 @@ class InterfaceSerializer(serializers.Serializer):
     h.如果某个字段指定read_only=True，那么此字段，前端在创建数据时（反序列化过程）可以不用传，但是一定会输出（序列化过程）
     i.字段不能同时指定read_only=True, required=True
     leader = serializers.CharField(max_length=200, label='项目负责人', help_text='项目负责人', read_only=True, required=True)
-    只写入不输出writer_only = True ,只输出不写入 read_only = True
     tester = serializers.CharField(max_length=200, label='测试人员', help_text='测试人员')
     j.如果某个字段指定write_only=True，那么此字段只能进行反序列化输入，而不会输出（创建数据时必须得传，但是不返回）
     k.可以给字段添加error_messages参数，为字典类型，字典的key为校验的参数名，值为校验失败之后错误提示
@@ -44,9 +43,13 @@ class InterfaceSerializer(serializers.Serializer):
                                      queryset=Interfaces.objects.all(), message="项目名称不能少于2个字符"),
                                      is_name_contain_x])
     projects_id = serializers.IntegerField(label='所属项目ID', help_text='所属项目ID')
+    # allow_null=True 允许该字段传Null参数
+    # allow_blank=True 允许该字段传空字符串("")
+    # required=False/write_only=True 允许该字段不传
+    # 只写入不输出writer_only = True ,只输出不写入 read_only = True
     tester = serializers.CharField(max_length=50, label='测试人员', help_text='测试人员')
     desc = serializers.CharField(max_length=200, label='简要描述', help_text='简要描述', write_only=True,
-                                 error_messages={"required": "该字段必传1", "max_length": "长度不能操作200个字节"})
+                                 error_messages={"required": "该字段必传", "max_length": "长度不能操作200个字节"})
     # 输出时间
     creat_time = serializers.DateTimeField(format='%Y-%m-%d %H:%M:%S', required=False, read_only=True)
     updata_time = serializers.DateTimeField(format='%Y-%m-%d %H:%M:%S', required=False, read_only=True)
