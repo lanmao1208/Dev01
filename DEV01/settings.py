@@ -134,3 +134,8 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/3.0/howto/static-files/
 
 STATIC_URL = '/static/'
+
+# 在全局配置文件setting.py文件中的REST_FRAMEWORK字典里修改DRF框架的配置
+REST_FRAMEWORK = {
+    'NON_FIELD_ERRORS_KEY': 'errors',
+    }

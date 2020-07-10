@@ -1,10 +1,10 @@
 from django.db import models
 
+
 # Create your models here.
 # 一个mysql软件中，可以有多个数据库
 # 一个数据库中，可以有多张数据表
 # 一张数据表中，有多条数据（多条记录）以及多个字段（多个列）
-
 
 
 class Interfaces(models.Model):
@@ -38,13 +38,13 @@ class Interfaces(models.Model):
     """
     name = models.CharField(max_length=200, verbose_name='接口名称', help_text='接口名称', unique=True)
     # 外键字段名称
-    projects = models.ForeignKey("projects.Projects",on_delete=models.CASCADE,verbose_name="所属项目ID",help_text="所属项目ID")
+    projects = models.ForeignKey("projects.Projects", on_delete=models.CASCADE, verbose_name="所属项目ID",
+                                 help_text="所属项目ID")
     tester = models.CharField(max_length=50, verbose_name='测试人员', help_text='测试人员')
-    desc = models.CharField(verbose_name='简要描述',max_length=200, blank=True, default='xxx简介', null=True)
+    desc = models.CharField(verbose_name='简要描述', max_length=200, blank=True, default='xxx简介', null=True)
     # 输出时间
     creat_time = models.DateTimeField(auto_now_add=True)
     updata_time = models.DateTimeField(auto_now=True)
-
 
     class Meta:
         db_table = 'tb_interfaces'
