@@ -37,7 +37,7 @@ class Interfaces(models.Model):
     21、verbose_name指定表的个性化描述
     """
     name = models.CharField(max_length=200, verbose_name='接口名称', help_text='接口名称', unique=True)
-    # 外键字段名称
+    # 外键字段名称,可设置related_name = "指定名"，指定名为父表在ModelSerializer类中打印该表属性时所用的指定属性名称
     projects = models.ForeignKey("projects.Projects", on_delete=models.CASCADE, verbose_name="所属项目ID",
                                  help_text="所属项目ID")
     tester = models.CharField(max_length=50, verbose_name='测试人员', help_text='测试人员')

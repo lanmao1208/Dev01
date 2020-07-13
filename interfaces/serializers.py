@@ -3,6 +3,9 @@ from rest_framework import validators
 from .models import Interfaces
 
 
+# from projects.models import Projects
+
+
 # 定义筛选条件类
 # value为前端输入待效验的值
 def is_name_contain_x(value):
@@ -12,6 +15,7 @@ def is_name_contain_x(value):
 
 
 # 一定要继承父类 序列化器类
+# Serializer方法
 class InterfaceSerializer(serializers.Serializer):
     """
     可以定义序列化器类，来实现序列化和反序列化操作
@@ -92,3 +96,56 @@ class InterfaceSerializer(serializers.Serializer):
         instance.desc = validated_data.get('desc') or instance.desc
         instance.save()
         return instance
+
+
+# ModelSerializer方法
+class InterfaceModelSerializer(serializers.ModelSerializer):
+    """
+    如果在模型序列化器类中显示指定了模型类中的某个字段，那么会将自动生成的字段覆盖掉
+    name = serializers.CharField(max_length=10, label='项目名称', help_text='项目名称', min_length=2,
+                                 validators=[validators.UniqueValidator(queryset=Projects.objects.all(), message='项目已存在')])
+    可以再该类下重新定义model中属性，重新定义后会覆盖原有属性
+    1.projects字段输出父表中主键id值
+        projects = serializers.PrimaryKeyRelatedField(help_text='所属项目', label='所属项目', queryset=Projects.objects.all())
+    2.自动调用模型类中__str__()方法，通过projects字段输出
+        projects = serializers.StringRelatedField()
+    3.projects字段输出父表中slug_field的指定字段，该处为leader
+        projects = serializers.SlugRelatedField(slug_field="leader",read_only=True)
+    4.可以将某个序列化器对象定义为字段，支持fields中的所有参数,
+        projects = ProjectsModelSerializer(label='所属项目信息', help_text='所属项目信息', read_only=True)
+    部分注释可以观看projects/serializer文件
+    """
+    projects = serializers.PrimaryKeyRelatedField()
+
+    # Meta类名固定，用于存放当前类的一些元素信息
+    class Meta:
+        """
+        1.不能调用，只能使用模型类名称
+        2.可以进入ipython模式查看相关信息
+            1.使用python manage.py shell -i ipython进入ipython(需要提前安装ipython)
+            2.from interfaces.serializers import InterfaceModelSerializer导入
+            3.InterfaceModelSerializer()调用方法，查看信息
+        3.fields = '__all__' 传递全部字段
+          fields = (字段名1,字段名2,.....)只传递元祖内字段
+          exclude = (字段名1,.....)只传递除元祖内字段
+          read_only_fields = (字段名1,.....)元祖内字段统一设置read_only属性
+
+        """
+        #
+        model = Interfaces
+        fields = '__all__'
+        # 改写属性:可以修改属性，也可以添加不存在的属性
+        extra_kwargs = {
+            "tester": {
+                'label': '研发人员',
+                'write_only': True,
+                'max_length': 20,
+                'min_length': 2
+            },
+            "name": {
+                'max_length': 20,
+                'min_length': 2,
+                'validators': [is_name_contain_x]
+            }
+        }
+        read_only_fields = ('creat_time', 'updata_time')

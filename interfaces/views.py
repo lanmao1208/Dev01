@@ -5,6 +5,7 @@ from django.shortcuts import render
 from interfaces.models import Interfaces
 from django.db import connections
 from .serializers import InterfaceSerializer
+from .serializers import InterfaceModelSerializer
 
 """
 序列化器对象中的几个重要属性
@@ -60,11 +61,11 @@ class InterfacesPage(View):
         try:
             # pk存在则为指定查询对象
             if pk:
-                res = Interfaces.objects.filter(id=pk)
+                res = self.pk_validity(pk, result)
             # 不存在则为查询所有对象
             else:
                 res = Interfaces.objects.all()
-            one_obj = InterfaceSerializer(instance=res, many=True)
+            one_obj = InterfaceModelSerializer(instance=res, many=True)
             result["data"] = one_obj.data
             result["msg"] = "查询成功"
             result["code"] = 0
@@ -100,7 +101,7 @@ class InterfacesPage(View):
             result["code"] = 1
             return JsonResponse(result, status=400)
 
-        rsf = InterfaceSerializer(data=create_json_data)
+        rsf = InterfaceModelSerializer(data=create_json_data)
         # 效验数据是否符合接口要求的参数设置
         try:
             # 创建序列化器对象
@@ -124,12 +125,7 @@ class InterfacesPage(View):
     def put(self, request, pk):
         result = {}
         # 更新id为pk，更新内容通过json传递
-        try:
-            res = Interfaces.objects.get(id=pk)
-        except Exception as e:
-            result["msg"] = "参数错误"
-            result["code"] = 1
-            return JsonResponse(result, status=400)
+        res = self.pk_validity(pk,result)
         # json格式传入创建需要的参数
         updata_data = request.body
         # 判断传入参数是否为json或者字典格式
@@ -141,7 +137,7 @@ class InterfacesPage(View):
             return JsonResponse(result, status=400)
         # 如果在定义序列化器对象时，同时指定instance和data参数
         # a.调用序列化器对象.save()方法，会自动调用序列化器类中的update方法
-        rsf = InterfaceSerializer(instance=res, data=updata_json_data)
+        rsf = InterfaceModelSerializer(instance=res, data=updata_json_data)
         # 效验数据是否符合接口要求的参数设置
         try:
             rsf.is_valid(raise_exception=True)
@@ -159,12 +155,23 @@ class InterfacesPage(View):
     def delete(self, request, pk):
         # pk为指定删除对象的id
         result = {}
+        res = self.pk_validity(pk, result)
+        res.delete()
+        result["msg"] = "删除成功"
+        result["code"] = 0
+        return JsonResponse(result, status=201)
+
+    def pk_validity(self,pk,result):
+        """
+        用作效验pk传值参数
+        :param pk:
+        :param result:
+        :return:
+        """
         try:
-            Interfaces.objects.filter(id=pk).delete()
-            result["msg"] = "删除成功"
-            result["code"] = 0
-            return JsonResponse(result, status=201)
+            res = Interfaces.objects.get(id=pk)
         except Exception as e:
-            result["msg"] = "删除失败，查询不到指定id"
+            result["msg"] = "参数错误"
             result["code"] = 1
             return JsonResponse(result, status=400)
+        return res
