@@ -149,3 +149,24 @@ class InterfaceModelSerializer(serializers.ModelSerializer):
             }
         }
         read_only_fields = ('creat_time', 'updata_time')
+
+
+    # 序列化器类中书写单字段效验规则，命名规则必须为validate_字段名
+    # 不需要添加，自动运行该效验规则
+
+    def validate_name(self, value):
+        if "x" in value:
+            # 不符合效验条件，必须抛出ValidationError该异常，不可变
+            raise serializers.ValidationError("项目名称中不能包含x")
+        # 和序列化器类以外自定义效验方法不同，这里必须返回效验之后的值
+        return value
+
+    # 联合效验，多字段效验，效验顺序为最后
+    # 在序列化器类中对多字段进行联合校验
+    # a.校验方法名称为：validate
+    # b.一定要返回校验之后的值
+    # c.attrs为前端输入的待校验参数
+    def validate(self, attrs):
+        if len(attrs["name"]) != 8 or "测试" not in attrs:
+            raise serializers.ValidationError("项目名长度不为8或者测试人员名称中未包含‘测试’字样")
+        return attrs
