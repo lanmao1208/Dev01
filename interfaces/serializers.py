@@ -82,7 +82,9 @@ class InterfaceSerializer(serializers.Serializer):
     def create(self, validated_data):
         # validated_data参数为校验通过之后的数据
         # 必须将创建成功的模型类对象返回
-        obj = Interfaces.objects.create(**validated_data)
+        # obj = Interfaces.objects.create(**validated_data)
+        # 父类super的create方法传参拆包会报错
+        obj = super().create(validated_data)
         return obj
 
     # 重写序列化器类中的update方法

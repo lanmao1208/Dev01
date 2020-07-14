@@ -1,6 +1,8 @@
 import json
-from django.http import JsonResponse
+from django.http import JsonResponse,Http404
 from django.views import View
+from rest_framework.response import Response
+from rest_framework.views import APIView
 from django.shortcuts import render
 from interfaces.models import Interfaces
 from django.db import connections
@@ -18,7 +20,7 @@ from .serializers import InterfaceModelSerializer
 """
 
 
-class InterfacesPage(View):
+class InterfacesPage(APIView):
     """
     类视图
     1、一定要继承View父类，或者View的子类
@@ -173,5 +175,7 @@ class InterfacesPage(View):
         except Exception as e:
             result["msg"] = "参数错误"
             result["code"] = 1
-            return JsonResponse(result, status=400)
+            # return JsonResponse(result, status=400)
+            # 直接Http404也可以
+            raise Http404(result)
         return res
