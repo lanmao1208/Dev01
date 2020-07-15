@@ -3,12 +3,15 @@ from django.http import JsonResponse,Http404
 from django.views import View
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework.generics import GenericAPIView
 from rest_framework import status
 from django.shortcuts import render
 from interfaces.models import Interfaces
 from django.db import connections
-from .serializers import InterfaceSerializer
-from .serializers import InterfaceModelSerializer
+from .serializers import InterfacesSerializer
+from .serializers import InterfacesModelSerializer
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework.filters import OrderingFilter
 
 """
 序列化器对象中的几个重要属性
@@ -35,7 +38,7 @@ class InterfacesPage(APIView):
     4、实例方法的第二个参数为HttpRequest对象
     5、一定要返回HttpResponse对象或者HttpResponse子类对象
     """
-
+    # renderer_classes = [YAMLRenderer]
     def get(self, request, pk=None):
         """
         1.可以使用序列化器类来进行序列化输出
@@ -73,7 +76,7 @@ class InterfacesPage(APIView):
             # 不存在则为查询所有对象
             else:
                 res = Interfaces.objects.all()
-            one_obj = InterfaceModelSerializer(instance=res, many=True)
+            one_obj = InterfacesModelSerializer(instance=res, many=True)
             # result["data"] = one_obj.data
             # result["msg"] = "查询成功"
             # result["code"] = 0
@@ -83,6 +86,13 @@ class InterfacesPage(APIView):
             result["msg"] = "查询失败，指定ID不存在"
             result["code"] = 1
             # return JsonResponse(result, status=400)
+            # 2、需要使用DRF中的Response去返回
+            # a.对Django中的HttpResponse进行了拓展
+            # b.实现了根据请求头中Accept参数来动态返回
+            # c.默认情况下，如果不传Accept参数或者创建application/json，那么会返回json格式的数据
+            # d.如果Accept参数为text/html，那么会返回可浏览的api页面（html页面）
+            # e.Response第一个参数为，经过序列化之后的数据（往往需要使用序列化器对象.data）
+            # f.status指定响应状态码
             return Response(result, status=status.HTTP_400_BAD_REQUEST)
 
     def post(self, request):
@@ -125,7 +135,7 @@ class InterfacesPage(APIView):
         #     result["code"] = 1
         #     return JsonResponse(result, status=status.HTTP_400_BAD_REQUEST)
         result = {}
-        rsf = InterfaceModelSerializer(data=request.data)
+        rsf = InterfacesModelSerializer(data=request.data)
         # 效验数据是否符合接口要求的参数设置
         try:
             # 创建序列化器对象
@@ -153,7 +163,7 @@ class InterfacesPage(APIView):
         res = self.pk_validity(pk)
         # 如果在定义序列化器对象时，同时指定instance和data参数
         # a.调用序列化器对象.save()方法，会自动调用序列化器类中的update方法
-        rsf = InterfaceModelSerializer(instance=res, data=request.data)
+        rsf = InterfacesModelSerializer(instance=res, data=request.data)
         # 效验数据是否符合接口要求的参数设置
         try:
             rsf.is_valid(raise_exception=True)
@@ -196,20 +206,54 @@ class InterfacesPage(APIView):
         return res
 
 
-class InterfacesModelPage(APIView):
+# 如果要实现过滤、查询、分页等功能，需要继承GenericAPIView
+# a.GenericAPIView为APIView的子类，拓展了过滤、查询、分页
+class InterfacesModelPage(GenericAPIView):
+    # b.往往要指定queryset，当前接口中需要使用到的查询集（查询集对象）
+    # c.往往要指定serializer_class，当前接口中需要使用到的序列化器类
+    queryset = Interfaces.objects.all()
+    serializer_class = InterfacesModelSerializer
 
-    def get(self, request, pk=None):
+    # 安装 pip install django-filter
+    # 需要和项目一样在setting中注册
+    # 导入from django_filters.rest_framework import DjangoFilterBackend
+    # filter_backends来指定使用的过滤引擎，如果多个过滤引擎，可以在列表中添加
+    # filterset_fields来指定需要过滤的字段，字段要与模型类中的字段名一致
+    # 为精确匹配
+    # 也可以在全局settings.py配置文件中指定所用视图公用的过滤引擎,使用DEFAULT_FILTER_BACKENDS属性
+    # 如果视图中未指定，那么会使用全局的过滤引擎，如果视图中有指定，那么会使用视图中指定的过滤引擎（优先级更高）
+
+    # 可以在filter_backends中指定OrderingFilter来实现排序功能
+    filter_backends = [DjangoFilterBackend, OrderingFilter]
+    # filterset_fields = ['name', 'leader', 'id']
+    filterset_fields = ('name',)
+    # 在ordering_fields来指定需要排序的字段
+    # 前端在过滤时，需要使用ordering作为key，具体的排序字段作为value
+    # 默认使用升序过滤，如果要降序，可以在排序字段前使用减号（-）
+    # ordering_fields = ['id', 'name']
+    ordering_fields = ('name',)
+
+
+    def get(self, request):
         result = {}
         try:
-            if pk:
-                res = self.pk_validity(pk)
-            else:
-                res = Interfaces.objects.all()
+            # d.可以使用.get_queryset()方法，获取查询集对象，尽量不要直接使用self.queryset
+            res = self.get_queryset()
             # 过滤前端?后传入的name参数
-            name = request.query_params.get('name')
-            if name:
-                res = res.filter(name = name)
-            one_obj = InterfaceModelSerializer(instance=res, many=True)
+            # name = request.query_params.get('name')
+            # if name:
+            #     res = res.filter(name = name)
+            # one_obj = InterfacesModelSerializer(instance=res, many=True)
+            # ProjectsModelSerializer(*args, **kwargs)
+            # e.可以使用.get_serializer()方法，调用序列化器类，尽量不要直接使用self.serializer_class
+            # 需要调用.filter_queryset()方法，需要传递一个查询集对象
+            # 返回一个查询集
+            res = self.filter_queryset(res)
+
+            # serializer_obj = self.serializer_class(instance=qs, many=True)
+            # ProjectsModelSerializer(*args, **kwargs)
+            # e.可以使用.get_serializer()方法，调用序列化器类，尽量不要直接使用self.serializer_class
+            one_obj = self.get_serializer(instance=res, many=True)
             return Response(one_obj.data, status=status.HTTP_200_OK)
         except Exception as e:
             result["msg"] = "查询失败，指定ID不存在"

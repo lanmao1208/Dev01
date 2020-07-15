@@ -17,7 +17,7 @@ def is_name_contain_x(value):
 
 # 一定要继承父类 序列化器类
 # Serializer方法
-class InterfaceSerializer(serializers.Serializer):
+class InterfacesSerializer(serializers.Serializer):
     """
     可以定义序列化器类，来实现序列化和反序列化操作
     a.一定要继承serializers.Serializer或者Serializer的子类
@@ -102,7 +102,7 @@ class InterfaceSerializer(serializers.Serializer):
 
 
 # ModelSerializer方法
-class InterfaceModelSerializer(serializers.ModelSerializer):
+class InterfacesModelSerializer(serializers.ModelSerializer):
     """
     如果在模型序列化器类中显示指定了模型类中的某个字段，那么会将自动生成的字段覆盖掉
     name = serializers.CharField(max_length=10, label='项目名称', help_text='项目名称', min_length=2,
@@ -124,8 +124,8 @@ class InterfaceModelSerializer(serializers.ModelSerializer):
     # datetime_fmt = "%Y年%m月%d日 %H:%M:%S"
     # creat_time = serializers.DateTimeField(format=datetime_fmt, required=False, read_only=True)
 
-    # projects = serializers.StringRelatedField()
-    projects = ProjectsModelSerializer(label='所属项目信息', help_text='所属项目信息', read_only=True)
+    projects = serializers.StringRelatedField()
+    # projects = ProjectsModelSerializer(label='所属项目信息', help_text='所属项目信息', read_only=True)
     # 设置时间格式2
     creat_time = serializers.DateTimeField(format='%Y-%m-%d %H:%M:%S', required=False, read_only=True)
     updata_time = serializers.DateTimeField(format='%Y-%m-%d %H:%M:%S', required=False, read_only=True)

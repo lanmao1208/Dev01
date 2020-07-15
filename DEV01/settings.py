@@ -38,6 +38,8 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
+    'django_filters',
+
     'projects.apps.ProjectConfig',
     'interfaces.apps.InterfacesConfig',
 ]
@@ -138,4 +140,13 @@ STATIC_URL = '/static/'
 # 在全局配置文件setting.py文件中的REST_FRAMEWORK字典里修改DRF框架的配置
 REST_FRAMEWORK = {
     'NON_FIELD_ERRORS_KEY': 'errors',
+    'DEFAULT_RENDERER_CLASSES': [
+        # b.列表中的元素是有优先级的，第一个元素优先级最高
+        'rest_framework.renderers.JSONRenderer',
+        'rest_framework.renderers.BrowsableAPIRenderer',
+    ],
+    'DEFAULT_FILTER_BACKENDS': [
+        'django_filters.rest_framework.backends.DjangoFilterBackend',
+        'rest_framework.filters.OrderingFilter',
+    ]
     }
