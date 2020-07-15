@@ -58,3 +58,7 @@ projects/views.py：定义业务逻辑（先前端返回的页面）
 web应用如何调用后端服务（视图函数）：前端访问url ——> 调用指定的函数
 路由表：url与后端视图函数关系的一个一一映射表
 
+
+五、drf框架插件官网
+django-rest-framework.org/api-guide/parsers
+配置方法在drf包里的setting文件中的属性，可以复制到项目下的setting文件中重写

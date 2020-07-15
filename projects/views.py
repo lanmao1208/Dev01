@@ -5,14 +5,16 @@ import json
 # 0、导入HttpResponse
 import datetime
 from django.http import HttpResponse, JsonResponse
-from django.views import View
+from rest_framework.response import Response
+from rest_framework.views import APIView
 from django.shortcuts import render
 from projects.models import Projects
 from django.db import connections
 from interfaces import views
+from projects.serializers import ProjectsModelSerializer
 
 
-class IndexPage(View):
+class IndexPage(APIView):
     """
     类视图
     1、一定要继承View父类，或者View的子类
@@ -21,6 +23,7 @@ class IndexPage(View):
     4、实例方法的第二个参数为HttpRequest对象
     5、一定要返回HttpResponse对象或者HttpResponse子类对象
     """
+
     def get(self, request):
         # 假设data数据是从数据库从读取的
         # a.render函数主要用于渲染模板生成一个html页面
@@ -34,26 +37,34 @@ class IndexPage(View):
         # 第一个参数为字典或者嵌套字典的列表，如果为非字典类型，需要将safe设置为False
         # 会返回一个json的字符串
         # 模型类对象方法
-        res1 = Projects.objects.get(id = 1)
+        res = Projects.objects.all()
         # 第二种查询方法
-        res = Projects.objects.filter(id__lte=4)
-        return HttpResponse("<h2>GET请求：查询成功{}</h2>".format(res))
+        # res = Projects.objects.filter(id__lte=4)
+        # return HttpResponse("<h2>GET请求：查询成功{}</h2>".format(res))
 
+        one_obj = ProjectsModelSerializer(instance=res, many=True)
+        return Response(one_obj.data, status=201)
 
     def post(self, request):
         # a.可以使用request.POST方法，去获取application/x-www-urlencoded类型的参数
         # b.可以使用request.body方法，去获取application/json类型的参数
         # c.可以使用request.META方法，获取请求头参数，key为HTTP_请求头key的大写
-        times = datetime.datetime
+        # times = datetime.datetime
         # 模型类对象方法
-        pro_one = Projects(name="django作业1{}".format(times),leader="负责人1{}".format(times),
-                 tester="测试人员1{}".format(times),programmer="开发人员1{}".format(times))
+        # pro_one = Projects(name="django作业1{}".format(times),leader="负责人1{}".format(times),
+        #          tester="测试人员1{}".format(times),programmer="开发人员1{}".format(times))
         # 使用save()方法提交
-        pro_one.save()
+        # pro_one.save()
         # 创建方法二，使用查询集的Projects.objects.create()方法
-        pro_two = Projects.objects.create(name="django作业2{}".format(times),leader="负责人2{}".format(times),
-                 tester="测试人员2{}".format(times),programmer="开发人员2{}".format(times))
-        return HttpResponse("<h2>POST请求：创建成功</h2>")
+        # pro_two = Projects.objects.create(name="django作业2{}".format(times),leader="负责人2{}".format(times),
+        #          tester="测试人员2{}".format(times),programmer="开发人员2{}".format(times))
+        # return HttpResponse("<h2>POST请求：创建成功</h2>")
+        create_data = request.body
+        create_json_data = json.loads(create_data)
+        rsf = ProjectsModelSerializer(data=create_json_data)
+        rsf.is_valid(raise_exception=True)
+        rsf.save()
+        return Response(rsf.data, status=201)
 
     def put(self, request):
         # a.HttpResponse对象，第一个参数为字符串类型或者字节类型，会将字符串内容返回到前端
@@ -61,21 +72,22 @@ class IndexPage(View):
         # c.可以使用status参数来指定响应状态码
         # return HttpResponse("<h2>PUT请求：欢迎测试开发测试的大佬们！</h2>")
         # 获取id=1的数值，模型类对象方法
-        res1 = Projects.objects.get(id=1)
+        # res1 = Projects.objects.get(id=1)
         # 重新赋值
-        res1.name = "修改后id1的name值"
+        # res1.name = "修改后id1的name值"
         # 保存并提交
-        res1.save()
+        # res1.save()
         # 第二种更新方法
-        res2 = Projects.objects.filter(id = 2).update(name = "修改后id2的name值")
-        return HttpResponse("<h2>PUT请求：更新成功{}和{}</h2>".format(Projects.objects.get(id=1),
-                                                              Projects.objects.get(id=2)), content_type='application/json', status=200)
+        # res2 = Projects.objects.filter(id = 2).update(name = "修改后id2的name值")
+        # return HttpResponse("<h2>PUT请求：更新成功{}和{}</h2>".format(Projects.objects.get(id=1),
+        #                                                       Projects.objects.get(id=2)), content_type='application/json', status=200)
+        pass
 
     def delete(self, request):
         # 查询并删除，模型类对象方法
-        res1 = Projects.objects.get(id=1)
-        res1.delete()
+        # res1 = Projects.objects.get(id=1)
+        # res1.delete()
         # 第二种删除方法
-        res2 = Projects.objects.filter(id = 2).delete()
-        return HttpResponse("<h2>DELETE请求：删除成功</h2>")
-
+        # res2 = Projects.objects.filter(id = 2).delete()
+        # return HttpResponse("<h2>DELETE请求：删除成功</h2>")
+        pass

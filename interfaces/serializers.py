@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from rest_framework import validators
 from .models import Interfaces
+from projects.serializers import ProjectsModelSerializer
 
 
 # from projects.models import Projects
@@ -117,7 +118,17 @@ class InterfaceModelSerializer(serializers.ModelSerializer):
         projects = ProjectsModelSerializer(label='所属项目信息', help_text='所属项目信息', read_only=True)
     部分注释可以观看projects/serializer文件
     """
-    projects = serializers.PrimaryKeyRelatedField()
+    # 设置时间格式1
+    # import locale
+    # locale.setlocale(locale.LC_CTYPE,'chinese')
+    # datetime_fmt = "%Y年%m月%d日 %H:%M:%S"
+    # creat_time = serializers.DateTimeField(format=datetime_fmt, required=False, read_only=True)
+
+    # projects = serializers.StringRelatedField()
+    projects = ProjectsModelSerializer(label='所属项目信息', help_text='所属项目信息', read_only=True)
+    # 设置时间格式2
+    creat_time = serializers.DateTimeField(format='%Y-%m-%d %H:%M:%S', required=False, read_only=True)
+    updata_time = serializers.DateTimeField(format='%Y-%m-%d %H:%M:%S', required=False, read_only=True)
 
     # Meta类名固定，用于存放当前类的一些元素信息
     class Meta:
@@ -136,6 +147,7 @@ class InterfaceModelSerializer(serializers.ModelSerializer):
         #
         model = Interfaces
         fields = '__all__'
+        # fields = ('name', 'projects','tester','desc')
         # 改写属性:可以修改属性，也可以添加不存在的属性
         extra_kwargs = {
             "tester": {
@@ -150,8 +162,7 @@ class InterfaceModelSerializer(serializers.ModelSerializer):
                 'validators': [is_name_contain_x]
             }
         }
-        read_only_fields = ('creat_time', 'updata_time')
-
+        # read_only_fields = ('creat_time', 'updata_time')
 
     # 序列化器类中书写单字段效验规则，命名规则必须为validate_字段名
     # 不需要添加，自动运行该效验规则
