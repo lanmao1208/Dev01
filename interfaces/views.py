@@ -1,5 +1,5 @@
 import json
-from django.http import JsonResponse,Http404
+from django.http import JsonResponse, Http404
 from django.views import View
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -12,6 +12,8 @@ from .serializers import InterfacesSerializer
 from .serializers import InterfacesModelSerializer
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import OrderingFilter
+from utils.pagination import MyPagination
+
 
 """
 序列化器对象中的几个重要属性
@@ -22,6 +24,7 @@ from rest_framework.filters import OrderingFilter
 二、可以不用调用.is_valid()方法，也能访问
 .data 最终返回给前端的数据
 """
+
 
 # 1、需要继承APIView
 # a.对Django中的View进行了拓展
@@ -38,6 +41,7 @@ class InterfacesPage(APIView):
     4、实例方法的第二个参数为HttpRequest对象
     5、一定要返回HttpResponse对象或者HttpResponse子类对象
     """
+
     # renderer_classes = [YAMLRenderer]
     def get(self, request, pk=None):
         """
@@ -81,7 +85,7 @@ class InterfacesPage(APIView):
             # result["msg"] = "查询成功"
             # result["code"] = 0
             # return JsonResponse(result, safe=False, status=201)
-            return Response(one_obj.data,status=status.HTTP_200_OK)
+            return Response(one_obj.data, status=status.HTTP_200_OK)
         except Exception as e:
             result["msg"] = "查询失败，指定ID不存在"
             result["code"] = 1
@@ -187,7 +191,7 @@ class InterfacesPage(APIView):
         result["code"] = 0
         return Response(result, status=status.HTTP_204_NO_CONTENT)
 
-    def pk_validity(self,pk):
+    def pk_validity(self, pk):
         """
         用作效验pk传值参数
         :param pk:
@@ -232,13 +236,14 @@ class InterfacesModelPage(GenericAPIView):
     # 默认使用升序过滤，如果要降序，可以在排序字段前使用减号（-）
     # ordering_fields = ['id', 'name']
     ordering_fields = ('name',)
-
+    # 在视图中指定分页引擎类,优先级比全局指定要高
+    pagination_class = MyPagination
 
     def get(self, request):
         result = {}
         try:
             # d.可以使用.get_queryset()方法，获取查询集对象，尽量不要直接使用self.queryset
-            res = self.get_queryset()
+            # res = self.get_queryset()
             # 过滤前端?后传入的name参数
             # name = request.query_params.get('name')
             # if name:
@@ -248,8 +253,11 @@ class InterfacesModelPage(GenericAPIView):
             # e.可以使用.get_serializer()方法，调用序列化器类，尽量不要直接使用self.serializer_class
             # 需要调用.filter_queryset()方法，需要传递一个查询集对象
             # 返回一个查询集
-            res = self.filter_queryset(res)
-
+            res = self.filter_queryset(self.get_queryset())
+            page = self.paginate_queryset(res)
+            if page is not None:
+                one_obj = self.get_serializer(instance=page, many=True)
+                return self.get_paginated_response(one_obj.data)
             # serializer_obj = self.serializer_class(instance=qs, many=True)
             # ProjectsModelSerializer(*args, **kwargs)
             # e.可以使用.get_serializer()方法，调用序列化器类，尽量不要直接使用self.serializer_class
@@ -260,9 +268,12 @@ class InterfacesModelPage(GenericAPIView):
             result["code"] = 1
             return Response(result, status=status.HTTP_400_BAD_REQUEST)
 
-    def pk_validity(self, pk):
-        try:
-            res = Interfaces.objects.get(id=pk)
-        except Exception as e:
-            raise Http404
-        return res
+    def put(self, request, pk):
+
+        res = self.get_object()
+        rsf = InterfacesModelSerializer(instance=res, data=request.data)
+        # 在视图中抛出的异常，DRF会自动来处理
+        # 直接将报错信息以json格式返回
+        rsf.is_valid(raise_exception=True)
+        rsf.save()
+        return Response(rsf.data, status=status.HTTP_201_CREATED)

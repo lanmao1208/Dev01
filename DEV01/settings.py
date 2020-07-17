@@ -63,6 +63,7 @@ TEMPLATES = [
         # 指定html模板存放路径，可以添加多个路径用","分割
         'DIRS': [os.path.join(BASE_DIR, 'templates')],
         # 子应用下存在模板则设置为True，不然为False
+        # 指定子应用下是否有html页面
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -148,5 +149,10 @@ REST_FRAMEWORK = {
     'DEFAULT_FILTER_BACKENDS': [
         'django_filters.rest_framework.backends.DjangoFilterBackend',
         'rest_framework.filters.OrderingFilter',
-    ]
+    ],
+    # a.需要指定分页引擎，可以使用默认的PageNumberPagination分页引擎类
+    # 'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+    'DEFAULT_PAGINATION_CLASS': 'utils.pagination.MyPagination',
+    # b.必须指定每一页的数据条数
+    'PAGE_SIZE': 10,
     }
