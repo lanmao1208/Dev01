@@ -13,7 +13,8 @@ from .serializers import InterfacesModelSerializer
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import OrderingFilter
 from utils.pagination import MyPagination
-
+from rest_framework.mixins import ListModelMixin, CreateModelMixin, RetrieveModelMixin, UpdateModelMixin, \
+    DestroyModelMixin
 
 """
 序列化器对象中的几个重要属性
@@ -277,3 +278,44 @@ class InterfacesModelPage(GenericAPIView):
         rsf.is_valid(raise_exception=True)
         rsf.save()
         return Response(rsf.data, status=status.HTTP_201_CREATED)
+
+
+# a.可以先继承DRF中的Mixin拓展类
+# b.然后在继承GenericAPIView
+# c.ListModelMixin -> .list()方法：实现获取列表数据
+# d.CreateModelMixin -> .create()方法：实现创建数据
+class InterfacesView1(ListModelMixin, CreateModelMixin,GenericAPIView):
+    queryset = Interfaces.objects.all()
+    serializer_class = InterfacesModelSerializer
+    filter_backends = [DjangoFilterBackend, OrderingFilter]
+    filterset_fields = ('name',)
+    ordering_fields = ('name',)
+    pagination_class = MyPagination
+
+    def get(self, request, *args, **kwargs):
+        # ListModelMixin中的list方法
+        return self.list(request, *args, **kwargs)
+
+    def post(self, request, *args, **kwargs):
+        # CreateModelMixin中的create方法
+        return self.create(request, *args, **kwargs)
+
+
+# e.RetrieveModelMixin -> .retrieve()方法：实现获取详情数据
+# e.UpdateModelMixin -> .update()方法：实现更新数据
+# e.DestroyModelMixin -> .destroy()方法：实现删除数据
+class InterfacesView2(RetrieveModelMixin, UpdateModelMixin, DestroyModelMixin,GenericAPIView):
+    queryset = Interfaces.objects.all()
+    serializer_class = InterfacesModelSerializer
+
+    def get(self, request, *args, **kwargs):
+        # RetrieveModelMixin中的retrieve方法
+        return self.retrieve(request, *args, **kwargs)
+
+    def put(self, request, *args, **kwargs):
+        # UpdateModelMixin中的update方法
+        return self.update(request, *args, **kwargs)
+
+    def delete(self, request, *args, **kwargs):
+        # DestroyModelMixin的destroy方法
+        return self.destroy(request, *args, **kwargs)
