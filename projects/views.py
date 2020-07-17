@@ -10,7 +10,7 @@ from rest_framework.views import APIView
 from django.shortcuts import render
 from projects.models import Projects
 from django.db import connections
-from interfaces import views
+from interfaces import views_bf
 from projects.serializers import ProjectsModelSerializer
 
 
