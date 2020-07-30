@@ -23,8 +23,11 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SECRET_KEY = '$ct_l8152jte%zabbayr)@ro30hjgfs=0w33v_xjk)816(iv-e'
 
 # SECURITY WARNING: don't run with debug turned on in production!
+# DRF上线时最好关闭该选项，防止信息泄露
+# 关闭DEBUG后无法使用路由中的swagger和redoc功能
 DEBUG = True
 
+# ALLOWED_HOSTS = ['你的域名']
 ALLOWED_HOSTS = ['*']
 
 
@@ -39,6 +42,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'django_filters',
+    'drf_yasg',
 
     'projects.apps.ProjectConfig',
     'interfaces.apps.InterfacesConfig',
@@ -155,4 +159,9 @@ REST_FRAMEWORK = {
     'DEFAULT_PAGINATION_CLASS': 'utils.pagination.MyPagination',
     # b.必须指定每一页的数据条数
     'PAGE_SIZE': 10,
+
+    # 指定用于支持coreapi的Schema,drf版本高于3.10时添加
+    'DEFAULT_SCHEMA_CLASS': 'rest_framework.schemas.coreapi.AutoSchema',
     }
+
+

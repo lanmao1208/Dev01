@@ -8,7 +8,7 @@ from rest_framework import status
 from django.shortcuts import render
 from interfaces.models import Interfaces
 from django.db import connections
-from .serializers import InterfacesSerializer
+from .serializers_bf import InterfacesSerializer
 from .serializers import InterfacesModelSerializer
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import OrderingFilter
@@ -237,7 +237,7 @@ class InterfacesModelPage(GenericAPIView):
     # 在ordering_fields来指定需要排序的字段
     # 前端在过滤时，需要使用ordering作为key，具体的排序字段作为value
     # 默认使用升序过滤，如果要降序，可以在排序字段前使用减号（-）
-    # ordering_fields = ['id', 'name']
+    # filterset_fields = ['name', 'leader', 'id']
     ordering_fields = ('name',)
     # 在视图中指定分页引擎类,优先级比全局指定要高
     pagination_class = MyPagination
