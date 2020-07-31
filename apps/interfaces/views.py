@@ -1,3 +1,4 @@
+import logging
 from interfaces.models import Interfaces
 from .serializers import InterfacesModelSerializer, InterfacesNamesSerializer, InterfacesByProjectsIdSerializer
 from django_filters.rest_framework import DjangoFilterBackend
@@ -6,6 +7,10 @@ from rest_framework import viewsets
 from utils.pagination import MyPagination
 from rest_framework.decorators import action
 from rest_framework.response import Response
+
+# from utils.pagination import MyPagination
+# 定义日志器用于记录日志，logging.getLogger('全局配置settings.py中定义的日志器名')
+logger = logging.getLogger('mytest')
 
 
 class InterfacesViewSet(viewsets.ModelViewSet):
@@ -40,23 +45,26 @@ class InterfacesViewSet(viewsets.ModelViewSet):
         page = self.paginate_queryset(res)
         if page is not None:
             result = self.get_serializer(instance=page, many=True)
-            return self.get_paginated_response(result.data)
+            data = result.data
+            logger.debug(data)
+            return self.get_paginated_response(data)
         result = InterfacesNamesSerializer(instance=self.get_queryset(), many=True)
-        return Response(result.data)
+        data = result.data
+        logger.debug(data)
+        return Response(data)
 
     @action(detail=True)
     def interfaces(self, request, *args, **kwargs):
         # 分页操作
-        try:
-            instance = self.get_object()
-            result = self.get_serializer(instance=instance)
-            return Response(result.data)
-        except Exception as e:
-            res = self.filter_queryset(self.get_queryset())
-            page = self.paginate_queryset(res)
-            if page is not None:
-                result = self.get_serializer(instance=page, many=True)
-                return self.get_paginated_response(result.data)
+        instance = self.get_object()
+        result = Interfaces.objects.filter(projects=instance)
+        page = self.paginate_queryset(result)
+        if page is not None:
+            result = self.get_serializer(instance=page, many=True)
+            return self.get_paginated_response(result.data)
+        result = self.get_serializer(instance=instance)
+        return Response(result.data)
+
 
     def get_serializer_class(self):
         if self.action == 'names':
