@@ -32,7 +32,9 @@ schema_view = get_schema_view(
     public=True,
     # permission_classes=(permissions.AllowAny,),   # 权限类
 )
-
+# 账户密码配置方法
+# 在app项目的Terminal，输入python manage.py createsuperuser
+# 会让你输入 username,email,password，依次输入。完成后再尝试登录swagger，输入刚才创建的user和password，即可登录成功。
 urlpatterns = [
     path('admin/', admin.site.urls),
     # 添加接口文档平台的路由条目

@@ -11,10 +11,14 @@ https://docs.djangoproject.com/en/3.0/ref/settings/
 """
 
 import os
+import sys
 
 # Build paths inside the projects like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
+# 把某个路径添加到系统模块搜索路径中去
+# sys.path为一个列表
+sys.path.append(os.path.join(BASE_DIR, 'apps'))
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/3.0/howto/deployment/checklist/
@@ -28,8 +32,8 @@ SECRET_KEY = '$ct_l8152jte%zabbayr)@ro30hjgfs=0w33v_xjk)816(iv-e'
 DEBUG = True
 
 # ALLOWED_HOSTS = ['你的域名']
-ALLOWED_HOSTS = ['*']
-
+# 默认为空，可以使用127.0.0.1或者localhost
+ALLOWED_HOSTS = ["127.0.0.1"]
 
 # Application definition
 
@@ -43,9 +47,16 @@ INSTALLED_APPS = [
     'rest_framework',
     'django_filters',
     'drf_yasg',
+    'projects',
+    'interfaces',
+    'user',
 
-    'projects.apps.ProjectConfig',
-    'interfaces.apps.InterfacesConfig',
+    # 'projects.apps.ProjectConfig',
+    # 'interfaces.apps.InterfacesConfig',
+    # 可以将某个目录（包）标记为Source Root，那么Pycharm会有智能提示
+    # 不是Python的特性
+    # 'apps.projects',
+    # 'apps.interfaces'
 ]
 # 暂时屏蔽效验功能
 MIDDLEWARE = [
@@ -82,7 +93,6 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'DEV01.wsgi.application'
 
-
 # Database
 # https://docs.djangoproject.com/en/3.0/ref/settings/#databases
 
@@ -103,7 +113,6 @@ DATABASES = {
     }
 }
 
-
 # Password validation
 # https://docs.djangoproject.com/en/3.0/ref/settings/#auth-password-validators
 
@@ -122,7 +131,6 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-
 # Internationalization
 # https://docs.djangoproject.com/en/3.0/topics/i18n/
 # 指定简体中文，时区为上海
@@ -135,7 +143,6 @@ USE_I18N = True
 USE_L10N = True
 
 USE_TZ = True
-
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/3.0/howto/static-files/
@@ -162,6 +169,81 @@ REST_FRAMEWORK = {
 
     # 指定用于支持coreapi的Schema,drf版本高于3.10时添加
     'DEFAULT_SCHEMA_CLASS': 'rest_framework.schemas.coreapi.AutoSchema',
+
+    # DEFAULT_AUTHENTICATION_CLASSES指定默认的认证类（认证方式）
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        # 会话认证
+        'rest_framework.authentication.SessionAuthentication',
+        # 基本认证（用户名和密码认证）
+        'rest_framework.authentication.BasicAuthentication'
+    ],
+    # DEFAULT_PERMISSION_CLASSES指定认证之后，能获取到的权限
+    'DEFAULT_PERMISSION_CLASSES': [
+        # AllowAny，不需要登陆就有任意权限
+        # 'rest_framework.permissions.AllowAny',
+        # IsAuthenticated只要登录之后，就具备任意权限
+        # 'rest_framework.permissions.IsAuthenticated',
+        # IsAdminUser指定只有为管理员用户才用任意权限
+        # IsAuthenticatedOrReadOnly指定如果没登录，只能获取数据，如果登录成功，就具备任意权限
+        'rest_framework.permissions.IsAuthenticatedOrReadOnly',
+    ],
+}
+
+# 可以在全局配置settings.py中的LOGGING，来配置日志信息
+LOGGING = {
+    # 版本号
+    'version': 1,
+    # 指定是否禁用已经存在的日志器
+    'disable_existing_loggers': False,
+    # 日志的显示格式
+    'formatters': {
+        # simple为简化版格式的日志
+        'simple': {
+            'format': '%(asctime)s - [%(levelname)s] - [msg]%(message)s'
+        },
+        # verbose为详细格式的日志
+        'verbose': {
+            'format': '%(asctime)s - [%(levelname)s] - %(name)s - [msg]%(message)s - [%(filename)s:%(lineno)d ]'
+        },
+    },
+    # filters指定日志过滤器
+    'filters': {
+        'require_debug_true': {
+            '()': 'django.utils.log.RequireDebugTrue',
+        },
+    },
+    # handlers指定日志输出渠道
+    'handlers': {
+        # console指定输出到控制台
+        'console': {
+            'level': 'DEBUG',
+            'filters': ['require_debug_true'],
+            'class': 'logging.StreamHandler',
+            'formatter': 'simple'
+        },
+        # 日志保存到日志文件
+        'file': {
+            'level': 'DEBUG',
+            'class': 'logging.handlers.RotatingFileHandler',
+            # 指定存放日志文件的所处路径,必须指定已存在的文件夹路径，如果目前不存在，请创建一个
+            'filename': os.path.join(BASE_DIR, "logs/test.log"),  # 日志文件的位置
+            'maxBytes': 100 * 1024 * 1024,
+            'backupCount': 100,
+            'formatter': 'verbose'
+        },
+    },
+    # 定义日志器
+    'loggers': {
+        'mytest': {  # 定义了一个名为mytest的日志器
+            'handlers': ['console', 'file'],
+            'propagate': True,
+            'level': 'DEBUG',  # 日志器接收的最低日志级别
+        },
     }
+}
 
-
+# 默认使用的是Django auth子应用下的User模型类
+# 可以指定自定义的模型类
+# User模型类中有很多字段，其中有一个is_staff字段，指定是否为超级管理员，如果为0，这位普通用户
+# 可以在命令下使用python manage.py createsuperuser，来创建超级管理员
+# AUTH_USER_MODEL = 'auth.User'

@@ -34,7 +34,7 @@ manage.py：为命令行管理工具，用于开发阶段的项目启动、数�
 
 三、定制一个页面
 1、创建子应用
-a.python mangage.py startapp 子应用名
+a.python manage.py startapp 子应用名
 b.推荐子应用名小写复数形式，不要用中文
 projects/migrations：存放数据库迁移脚本和迁移历史记录等信息
 projects/admin.py：admin后台站点的相关配置（需要后台站点是才会用到）
