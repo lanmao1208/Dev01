@@ -7,6 +7,7 @@ from rest_framework import viewsets
 from utils.pagination import MyPagination
 from rest_framework.decorators import action
 from rest_framework.response import Response
+from rest_framework import permissions
 
 # from utils.pagination import MyPagination
 # 定义日志器用于记录日志，logging.getLogger('全局配置settings.py中定义的日志器名')
@@ -28,9 +29,15 @@ class InterfacesViewSet(viewsets.ModelViewSet):
     """
     queryset = Interfaces.objects.all()
     serializer_class = InterfacesModelSerializer
+    # authentication_classes在视图中指定认证方式，可以在列表中添加多个认证类
+    # 视图中指定的认证方式优先级大于全局指定的认证方式
+    # authentication_classes = []
+    # permission_classes在视图中指定权限，可以在列表中添加多个权限类
+    # 视图中指定的权限优先级大于全局指定的权限(setting.py文件)
+    permission_classes = [permissions.IsAuthenticated]
     filter_backends = [DjangoFilterBackend, OrderingFilter]
-    filterset_fields = ('name',)
-    ordering_fields = ('name',)
+    filterset_fields = ('id','name')
+    ordering_fields = ('id','name')
     pagination_class = MyPagination
 
     # a.可以使用action装饰器去自定义动作方法

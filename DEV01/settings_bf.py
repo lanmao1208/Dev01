@@ -188,7 +188,7 @@ REST_FRAMEWORK = {
         # 'rest_framework.permissions.IsAuthenticated',
         # IsAdminUser指定只有为管理员用户才用任意权限
         # IsAuthenticatedOrReadOnly指定如果没登录，只能获取数据，如果登录成功，就具备任意权限
-        # 'rest_framework.permissions.IsAuthenticatedOrReadOnly',
+        'rest_framework.permissions.IsAuthenticatedOrReadOnly',
     ],
 }
 
@@ -245,12 +245,24 @@ LOGGING = {
     }
 }
 
+# 默认使用的是Django auth子应用下的User模型类
+# 可以指定自定义的模型类
+# User模型类中有很多字段，其中有一个is_staff字段，指定是否为超级管理员，如果为0，这位普通用户
+# 可以在命令下使用python manage.py createsuperuser，来创建超级管理员
+# AUTH_USER_MODEL = 'auth.User'
+
+# 在全局配置JWT_AUTH中，可以覆盖JWT相关的参数
 JWT_AUTH = {
     # 指定处理登录接口响应数据的函数
     'JWT_RESPONSE_PAYLOAD_HANDLER':
         'utils.jwt_handle.jwt_response_payload_handler',
+
+    # 前端用户访问一些需要认证之后的接口，那么默认需要在请求头中携带参数，
+    # 请求key为Authorization，值为前缀 + 空格 + token值，如：JWT xxxssdhdsohsoshsohs
+
     # 可以指定token过期时间，默认为5分钟
     'JWT_EXPIRATION_DELTA': datetime.timedelta(days=1),
+
     # 指定前端传递token值的前缀
-    'JWT_AUTH_HEADER_PREFIX': 'Au',
+    # 'JWT_AUTH_HEADER_PREFIX': 'Bearer',
 }
