@@ -49,5 +49,5 @@ urlpatterns = [
     path('', include('projects.urls')),
     path('', include('interfaces.urls')),
     path('api/',include('rest_framework.urls')),
-    path('user',include('user.urls')),
+    path('user/',include('user.urls')),
 ]

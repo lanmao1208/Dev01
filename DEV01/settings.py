@@ -34,11 +34,12 @@ DEBUG = True
 
 # ALLOWED_HOSTS = ['你的域名']
 # 默认为空，可以使用127.0.0.1或者localhost
-ALLOWED_HOSTS = ["127.0.0.1"]
+ALLOWED_HOSTS = ["*"]
 
 # Application definition
 
 INSTALLED_APPS = [
+    'corsheaders',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -63,12 +64,31 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    # 需要添加在CommonMiddleware中间件之前
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     # 'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
+
+# 4.添加白名单
+# CORS_ORIGIN_ALLOW_ALL为True, 指定所有域名(ip)都可以访问后端接口, 默认为False
+CORS_ORIGIN_ALLOW_ALL = True
+
+
+# CORS_ORIGIN_WHITELIST指定能够访问后端接口的ip或域名列表
+# CORS_ORIGIN_WHITELIST = [
+#     "http://127.0.0.1:8080",
+#     "http://localhost:8080",
+#     "http://192.168.1.63:8080",
+#     "http://127.0.0.1:9000",
+#     "http://localhost:9000",
+# ]
+
+# 允许跨域时携带Cookie, 默认为False
+CORS_ALLOW_CREDENTIALS = True
 
 ROOT_URLCONF = 'DEV01.urls'
 
@@ -181,7 +201,7 @@ REST_FRAMEWORK = {
         'rest_framework.authentication.BasicAuthentication'
     ],
     # DEFAULT_PERMISSION_CLASSES指定认证之后，能获取到的权限
-    'DEFAULT_PERMISSION_CLASSES': [
+    # 'DEFAULT_PERMISSION_CLASSES': [
         # AllowAny，不需要登陆就有任意权限
         # 'rest_framework.permissions.AllowAny',
         # IsAuthenticated只要登录之后，就具备任意权限
@@ -189,7 +209,7 @@ REST_FRAMEWORK = {
         # IsAdminUser指定只有为管理员用户才用任意权限
         # IsAuthenticatedOrReadOnly指定如果没登录，只能获取数据，如果登录成功，就具备任意权限
         # 'rest_framework.permissions.IsAuthenticatedOrReadOnly',
-    ],
+    # ],
 }
 
 # 可以在全局配置settings.py中的LOGGING，来配置日志信息
@@ -252,5 +272,5 @@ JWT_AUTH = {
     # 可以指定token过期时间，默认为5分钟
     'JWT_EXPIRATION_DELTA': datetime.timedelta(days=1),
     # 指定前端传递token值的前缀
-    'JWT_AUTH_HEADER_PREFIX': 'Au',
+    # 'JWT_AUTH_HEADER_PREFIX': 'Au',
 }
