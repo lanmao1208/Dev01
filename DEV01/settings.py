@@ -52,7 +52,7 @@ INSTALLED_APPS = [
     'projects',
     'interfaces',
     'user',
-    'testcase',
+    'testcases',
     'configures',
     'debugtalks',
     'reports',
@@ -130,7 +130,7 @@ DATABASES = {
         # 指定数据库使用的引擎
         'ENGINE': 'django.db.backends.mysql',
         # 指定数据库的名称
-        'NAME': 'dev02',
+        'NAME': 'Dev02',
         # 指定连接的数据库主机地址，域名和ip都可以
         'HOST': 'localhost',
         # 指定数据库的连接端口号，默认为3306,
