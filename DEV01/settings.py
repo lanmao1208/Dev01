@@ -52,6 +52,12 @@ INSTALLED_APPS = [
     'projects',
     'interfaces',
     'user',
+    'testcase',
+    'configures',
+    'debugtalks',
+    'reports',
+    'envs',
+    'testsuits',
 
     # 'projects.apps.ProjectConfig',
     # 'interfaces.apps.InterfacesConfig',
@@ -124,7 +130,7 @@ DATABASES = {
         # 指定数据库使用的引擎
         'ENGINE': 'django.db.backends.mysql',
         # 指定数据库的名称
-        'NAME': 'Dev01',
+        'NAME': 'dev02',
         # 指定连接的数据库主机地址，域名和ip都可以
         'HOST': 'localhost',
         # 指定数据库的连接端口号，默认为3306,
@@ -172,7 +178,7 @@ STATIC_URL = '/static/'
 
 # 在全局配置文件setting.py文件中的REST_FRAMEWORK字典里修改DRF框架的配置
 REST_FRAMEWORK = {
-    'NON_FIELD_ERRORS_KEY': 'errors',
+    # 'NON_FIELD_ERRORS_KEY': 'errors',
     'DEFAULT_RENDERER_CLASSES': [
         # b.列表中的元素是有优先级的，第一个元素优先级最高
         'rest_framework.renderers.JSONRenderer',
@@ -272,5 +278,5 @@ JWT_AUTH = {
     # 可以指定token过期时间，默认为5分钟
     'JWT_EXPIRATION_DELTA': datetime.timedelta(days=1),
     # 指定前端传递token值的前缀
-    # 'JWT_AUTH_HEADER_PREFIX': 'Au',
+    'JWT_AUTH_HEADER_PREFIX': 'JWT',
 }

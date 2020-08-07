@@ -1,5 +1,5 @@
 from django.db import models
-
+from utils.base_models import BaseModel
 
 # Create your models here.
 # 一个mysql软件中，可以有多个数据库
@@ -7,7 +7,12 @@ from django.db import models
 # 一张数据表中，有多条数据（多条记录）以及多个字段（多个列）
 
 
-class Interfaces(models.Model):
+from django.db import models
+
+from utils.base_models import BaseModel
+
+
+class Interfaces(BaseModel):
     """
     1、可以在子应用projects/models.py文件中，来定义数据模型
     2、一个数据模型类对应一个数据表
@@ -36,15 +41,13 @@ class Interfaces(models.Model):
     20、可以使用db_table类属性，来指定表名
     21、verbose_name指定表的个性化描述
     """
-    name = models.CharField(max_length=200, verbose_name='接口名称', help_text='接口名称', unique=True)
+    id = models.AutoField(verbose_name='id主键', primary_key=True, help_text='id主键')
+    name = models.CharField('接口名称', max_length=200, unique=True, help_text='接口名称')
     # 外键字段名称,可设置related_name = "指定名"，指定名为父表在ModelSerializer类中打印该表属性时所用的指定属性名称
-    projects = models.ForeignKey("projects.Projects", on_delete=models.CASCADE, verbose_name="所属项目ID",
-                                 help_text="所属项目ID")
-    tester = models.CharField(max_length=50, verbose_name='测试人员', help_text='测试人员')
-    desc = models.CharField(verbose_name='简要描述', max_length=200, blank=True, default='xxx简介', null=True)
-    # 输出时间
-    creat_time = models.DateTimeField(auto_now_add=True)
-    updata_time = models.DateTimeField(auto_now=True)
+    project = models.ForeignKey('projects.Projects', on_delete=models.CASCADE,
+                                related_name='interfaces', help_text='所属项目')
+    tester = models.CharField('测试人员', max_length=50, help_text='测试人员')
+    desc = models.CharField('简要描述', max_length=200, null=True, blank=True, help_text='简要描述')
 
     class Meta:
         db_table = 'tb_interfaces'
@@ -52,4 +55,4 @@ class Interfaces(models.Model):
         verbose_name_plural = verbose_name
 
     def __str__(self):
-        return f"<{self.name}>"
+        return self.name
