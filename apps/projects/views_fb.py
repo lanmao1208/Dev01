@@ -8,6 +8,7 @@ from rest_framework.decorators import action
 from rest_framework import permissions
 from .models import Projects
 from interfaces.models import Interfaces
+from testsuits.models import Testsuits
 from .serializers import ProjectsModelSerializer, ProjectsNamesModelSerializer, InterfacesByProjectIdModelSerializer1
 
 
@@ -118,9 +119,40 @@ class ProjectsViewSet(viewsets.ModelViewSet):
     serializer_class = ProjectsModelSerializer
     permission_classes = [permissions.IsAuthenticated]
 
+    # def list(self, request, *args, **kwargs):
+    #     response = super().list(request, *args, **kwargs)
+    #     results = response.data['results']
+    #     for item in results:
+    #         # item为一条项目数据所在的字典
+    #         # 需要获取当前项目所属的接口总数、用例总数、配置总数、套件总数
+    #         project_id = item.get('id')
+    #         # interface_count = Interfaces.objects.filter(project_id=project_id).count()
+    #         # interface_qs = Interfaces.objects.filter(project_id=project_id)
+    #         # for obj in interface_qs:
+    #         #     interface_id = obj.id
+    #         #     TestCase.ojbects.filter(interface_id=interface_id).count()
+    #
+    #         # a.使用.annotate()方法，那么会自动使用当前模型类的主键作为分组条件
+    #         # b.使用.annotate()方法里可以添加聚合函数，计算的名称为一般从表模型类名小写（可以在外键字段上设置related_name）
+    #         # c.values可以指定需要查询的字段（默认为所用字段）
+    #         # d.可以给聚合函数指定别名，默认为testcases__count
+    #         # 指定查询创建时间最早或者最晚的测试用例，注意参数和参数中间用双下划线分割，另外还可以计算平均值等
+    #         # 聚合函数中第一个为从表表名小写，第二个字段为从表字段名小写
+    #         # annotate(testcases=Min('testcases__create_time')) or annotate(testcases=Max('testcases__create_time'))
+    #         # values调用在annotate方法后面时，values('id', 'testcases')方法中输出你想要的输出的字段，此处为id和testcases字段
+    #         # values调用在annotate方法前面时，values('id')会自动输出testcases字段，查询结果相同
+    #         interfaces_qs = Interfaces.objects.values('id').annotate(testcases=Count('testcases')).filter(project_id=project_id)
+    #         # interfaces_obj = Interfaces.objects.annotate(testcases=Count('testcases')).values('id', 'testcases').filter(project_id=project_id)
+    #
+    #         Interfaces.objects.annotate(Count('testcases'))
+    #     pass
+    # 如果父类中有提供相关的逻辑
+    # 1、绝大部分不需要修改，只有少量要修改的，直接对父类中的action进行拓展
+    # 2、绝大部分都需要修改的话，那么直接自定义即可
     def list(self, request, *args, **kwargs):
         response = super().list(request, *args, **kwargs)
         results = response.data['results']
+        data_list = []
         for item in results:
             # item为一条项目数据所在的字典
             # 需要获取当前项目所属的接口总数、用例总数、配置总数、套件总数
@@ -132,14 +164,44 @@ class ProjectsViewSet(viewsets.ModelViewSet):
             #     TestCase.ojbects.filter(interface_id=interface_id).count()
 
             # a.使用.annotate()方法，那么会自动使用当前模型类的主键作为分组条件
-            # b.使用.annotate()方法里可以添加聚合函数，计算的名称为一般从表模型类名小写（还需要在外键字段上设置related_name）
+            # b.使用.annotate()方法里可以添加聚合函数，计算的名称为一般从表模型类名小写（可以在外键字段上设置related_name）
             # c.values可以指定需要查询的字段（默认为所用字段）
             # d.可以给聚合函数指定别名，默认为testcases__count
-            interfaces_obj = Interfaces.objects.annotate(testcases=Count('testcases')).values('id', 'testcases').\
+            # e.如果values放在annotate前面，那么聚合运算的字段不需要在values中添加，放在后面需要
+            # interfaces_obj = Interfaces.objects.annotate(testcases1=Count('testcases')).values('id', 'testcases1').\
+            #     filter(project_id=project_id)
+
+            interface_testcase_qs = Interfaces.objects.values('id').annotate(testcases=Count('testcases')). \
                 filter(project_id=project_id)
 
-            Interfaces.objects.annotate(Count('testcases'))
-        pass
+            # 获取项目下的接口总数
+            interfaces_count = interface_testcase_qs.count()
+
+            # 定义初始用例总数为0
+            testcases_count = 0
+            for one_dict in interface_testcase_qs:
+                testcases_count += one_dict.get('testcases')
+
+            # 获取项目下的配置总数
+            interface_configure_qs = Interfaces.objects.values('id').annotate(configures=Count('configures')). \
+                filter(project_id=project_id)
+            configures_count = 0
+            for one_dict in interface_configure_qs:
+                configures_count += one_dict.get('configures')
+
+            # 获取项目下套件总数
+            testsuites_count = Testsuits.objects.filter(project_id=project_id).count()
+
+            item['interfaces'] = interfaces_count
+            item['testcases'] = testcases_count
+            item['testsuits'] = testsuites_count
+            item['configures'] = configures_count
+            data_list.append(item)
+
+        response.data['results'] = data_list
+
+        return response
+
 
     @action(methods=['get'], detail=False)
     def names(self, request, *args, **kwargs):

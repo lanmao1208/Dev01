@@ -1,78 +1,61 @@
 from rest_framework import serializers, validators
 from .models import Interfaces
+from projects.models import Projects
+from testcases.serializers import TestcasesModelSerializer
+from configures.serializers import ConfiguresModelSerializer
 from utils import common
 
 
-# 定义筛选条件类
-# value为前端输入待效验的值
-def is_name_contain_x(value):
-    if "x" in value:
-        # 不符合效验条件，必须抛出ValidationError该异常，不可变
-        raise serializers.ValidationError("项目名称中不能包含x")
-
-
-# ModelSerializer方法
+# 使用模型序列化器类：简化序列化器类中字段的创建
 class InterfacesModelSerializer(serializers.ModelSerializer):
-    projects = serializers.StringRelatedField()
-    # projects_id = serializers.IntegerField(label='外键ID', help_text='外键ID')
-    # creat_time = serializers.DateTimeField(format='%Y-%m-%d %H:%M:%S', required=False, read_only=True)
-    # updata_time = serializers.DateTimeField(format='%Y-%m-%d %H:%M:%S', required=False, read_only=True)
+    # 因为project为外键字段，所以此地使用project or project_id都行
+    project = serializers.StringRelatedField(help_text='所属项目名称', label='所属项目名称')
+    project_id = serializers.PrimaryKeyRelatedField(write_only=True,
+                                                    queryset=Projects.objects.all(help_text='所属项目ID', label='所属项目ID'))
+
+    # project_id = serializers.IntegerField(write_only=True, validators=[])
 
     class Meta:
         model = Interfaces
-        fields = '__all__'
+        fields = ('id', 'name', 'tester', 'project', 'create_time', 'project_id', 'desc')
         extra_kwargs = {
-            "tester": {
-                'label': '研发人员',
-                'write_only': True,
-                'max_length': 20,
-                'min_length': 2
-            },
-            "name": {
-                'max_length': 20,
-                'min_length': 2,
-                'validators': [is_name_contain_x]
-            },
             "create_time": {
                 'read_only': True,
-                'format': common.datetime_fmt(),
+                'format': common.datetime_fmt()
             },
-            "update_time": {
-                'read_only': True,
-                'format': common.datetime_fmt(),
-            }
+            "name" : {[validators.UniqueValidator(queryset=model.objects.all(),message='项目名称不能重复')]}
         }
 
-    def validate_name(self, value):
-        if "x" in value:
-            raise serializers.ValidationError("项目名称中不能包含x")
+    def create(self, validated_data):
+        if 'project_id' in validated_data:
+            project = validated_data.pop('project_id')
+            validated_data['project'] = project
+            return super().create(validated_data)
 
-        return value
+    def update(self, instance, validated_data):
+        if 'project_id' in validated_data:
+            project = validated_data.pop('project_id')
+            validated_data['project'] = project
+            return super().update(instance, validated_data)
 
-    # def validate(self, attrs):
-    #     if len(attrs["name"]) != 8 or "测试" not in attrs:
-    #         raise serializers.ValidationError("项目名长度不为8或者测试人员名称中未包含‘测试’字样")
-    #     return attrs
+
+class TestcasesByInterfacesIdModelSerializer(serializers.ModelSerializer):
+    testcases = TestcasesModelSerializer(label='用例信息', help_text='用例信息', many=True)
+
+    class Meta:
+        model = Interfaces
+        fields = ("testcases",)
 
 
-class InterfacesNamesSerializer(serializers.ModelSerializer):
+class ConfiguresByInterfacesIdModelSerializer(serializers.ModelSerializer):
+    configuers = ConfiguresModelSerializer(label='配置信息', help_text='配置信息', many=True)
+
+    class Meta:
+        model = Interfaces
+        fields = ("configuers",)
+
+
+class InterfacesNameModelSerializer(serializers.ModelSerializer):
     class Meta:
         model = Interfaces
         fields = ("id", "name")
-
-
-class InterfacesByProjectsIdSerializer(serializers.ModelSerializer):
-    interfaces = InterfacesNamesSerializer(many=True, read_only=True)
-
-    # projects_id = serializers.IntegerField(label='外键ID1', help_text='外键ID1',
-    #                                        validators=[validators.UniqueValidator(queryset=Projects.objects.all(),
-    #                                                                               message='项目已存在')])
-
-    # def validate_projects_id(self, value):
-    #     if 2 == value:
-    #         raise serializers.ValidationError("项目id不能为2")
-    #     return value
-
-    class Meta:
-        model = Interfaces
-        fields = ("id", "name", "interfaces")

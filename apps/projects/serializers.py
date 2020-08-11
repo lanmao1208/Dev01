@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from .models import Projects
 from interfaces.models import Interfaces
+from debugtalks.models import DebugTalks
 from interfaces.serializers import InterfacesModelSerializer
 from utils import common
 
@@ -25,6 +26,12 @@ class ProjectsModelSerializer(serializers.ModelSerializer):
             },
 
         }
+
+        def create(self, validated_data):
+            # 在创建项目时，同时创建一个空的debugtalk.py文件
+            project = super().create(validated_data)
+            DebugTalks.objects.create(project=project)
+            return project
 
 
 class ProjectsNamesModelSerializer(serializers.ModelSerializer):

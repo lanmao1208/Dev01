@@ -1,82 +1,87 @@
 import logging
 from interfaces.models import Interfaces
-from .serializers import InterfacesModelSerializer, InterfacesNamesSerializer, InterfacesByProjectsIdSerializer
+from .serializers import InterfacesModelSerializer,TestcasesByInterfacesIdModelSerializer,ConfiguresByInterfacesIdModelSerializer
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import OrderingFilter
-from rest_framework import viewsets
+from utils.currency_class import Currency_View_Class
 from utils.pagination import MyPagination
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework import permissions
+from testcases.models import Testcases
+from configures.models import Configures
 
 # from utils.pagination import MyPagination
 # 定义日志器用于记录日志，logging.getLogger('全局配置settings.py中定义的日志器名')
 logger = logging.getLogger('mytest')
 
 
-class InterfacesViewSet(viewsets.ModelViewSet):
+class InterfacesViewSet(Currency_View_Class):
     """
+    name:
+        获取所有接口的id，name
     list:
-        获取项目的列表信息
-    retrive:
-        获取项目详情数据
+        获取所有接口列表信息
     create:
-        创建项目
-    names:
-        获取项目名称
-    interfaces：
-        获取某个项目下的接口名称
+        创建接口
+    retrieve:
+        获取接口详情
+    destory:
+        删除接口
+    update:
+        更新接口
     """
     queryset = Interfaces.objects.all()
     serializer_class = InterfacesModelSerializer
-    # authentication_classes在视图中指定认证方式，可以在列表中添加多个认证类
-    # 视图中指定的认证方式优先级大于全局指定的认证方式
-    # authentication_classes = []
-    # permission_classes在视图中指定权限，可以在列表中添加多个权限类
-    # 视图中指定的权限优先级大于全局指定的权限(setting.py文件)
     permission_classes = [permissions.IsAuthenticated]
-    filter_backends = [DjangoFilterBackend, OrderingFilter]
-    filterset_fields = ('id','name')
-    ordering_fields = ('id','name')
-    pagination_class = MyPagination
 
-    # a.可以使用action装饰器去自定义动作方法
-    # b.methods参数默认为['get']，可以定义支持请求方式['get', 'post', 'put']
-    # c.detail参数为必传参数，指定是否为详情数据（如果需要传递主键id那么，detail=True，否则detail=False）
-    # d.url_path指定url路径部分，默认为action名称（当前为names）
-    # e.url_name指定url的名称，默认为action名称（当前为names，完整路由名称为names-list）
-    @action(detail=False)
-    def names(self, request):
-        # 分页操作
-        res = self.filter_queryset(self.get_queryset())
-        page = self.paginate_queryset(res)
-        if page is not None:
-            result = self.get_serializer(instance=page, many=True)
-            data = result.data
-            logger.debug(data)
-            return self.get_paginated_response(data)
-        result = InterfacesNamesSerializer(instance=self.get_queryset(), many=True)
-        data = result.data
-        logger.debug(data)
-        return Response(data)
+    def list(self, request, *args, **kwargs):
+        """
+        testcases: 用例总数
+        configures: 配置总数
+        :param request:
+        :param args:
+        :param kwargs:
+        :return:
+        """
+        response = super().list(self, request, *args, **kwargs)
+        dict_data = response.data["result"]
+        for item in dict_data:
+            # 获取接口id
+            interfaces_id = item.get('id')
+            # 用例总数
+            testcases_count = Testcases.objects.filter(interfaces_id=interfaces_id).count()
+            # 配置总数
+            configures_count = Configures.objects.filter(interfaces_id=interfaces_id).count()
+            result_data = {"testcases": testcases_count, "configures": configures_count}
+            item.update(result_data)
+        response.data["result"] = dict_data
+        return response
 
-    @action(detail=True)
-    def interfaces(self, request, *args, **kwargs):
-        # 分页操作
-        instance = self.get_object()
-        result = Interfaces.objects.filter(projects=instance)
-        page = self.paginate_queryset(result)
-        if page is not None:
-            result = self.get_serializer(instance=page, many=True)
-            return self.get_paginated_response(result.data)
-        result = self.get_serializer(instance=instance)
-        return Response(result.data)
+    @action(methods=['get'],detail=True)
+    def testcases(self, request, *args, **kwargs):
+        # instance = self.get_object()
+        # serializer_obj = self.get_serializer(instance=instance)
+        # return Response(serializer_obj.data["testcases"])
+        # response = self.retrieve(request, *args, **kwargs)
+        # response.data = response.data["testcases"]
+        # return response
+        return self.currency_action_def(request, "testcases", *args, **kwargs)
 
+    @action(methods=['get'],detail=True)
+    def configures(self, request, *args, **kwargs):
+        # instance = self.get_object()
+        # serializer_obj = self.get_serializer(instance=instance)
+        # return Response(serializer_obj.data["configures"])
+        # response = self.retrieve(request, *args, **kwargs)
+        # response.data = response.data["configures"]
+        # return response
+        return self.currency_action_def(request, "configures",*args, **kwargs)
 
     def get_serializer_class(self):
-        if self.action == 'names':
-            return InterfacesNamesSerializer
-        elif self.action == 'interfaces':
-            return InterfacesByProjectsIdSerializer
+        if self.action == 'testcases':
+            return TestcasesByInterfacesIdModelSerializer
+        elif self.action == 'configures':
+            return ConfiguresByInterfacesIdModelSerializer
         else:
             return self.serializer_class
