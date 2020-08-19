@@ -1,5 +1,4 @@
 import os
-import json
 from rest_framework import mixins
 from rest_framework.viewsets import GenericViewSet
 from rest_framework import permissions
@@ -9,9 +8,9 @@ from django.conf import settings
 from django.http.response import StreamingHttpResponse
 from django.utils.encoding import escape_uri_path
 
-from reports.models import Reports
-from reports.serializers import ReportsModelSerializer
-from reports.utils import get_file_content
+from .models import Reports
+from .serializers import ReportsModelSerializer
+from .utils import get_file_content
 
 
 class ReportsViewSet(mixins.ListModelMixin,
@@ -23,23 +22,11 @@ class ReportsViewSet(mixins.ListModelMixin,
     permission_classes = [permissions.IsAuthenticated]
     ordering_fields = ['id', 'name']
 
-    def list(self, request, *args, **kwargs):
-        response = super().list(request, *args, **kwargs)
-        result = response.data["result"]
-        data_list = []
-        for item in result:
-            item["result"] = "Pass" if item["result"] else "Fail"
-            data_list.append(item)
-        response.data["result"] = data_list
-        return response
-
-    def retrieve(self, request, *args, **kwargs):
-        response = super().retrieve(request, *args, **kwargs)
-        try:
-            response.data["summary"] = json.loads(response.data["summary"])
-        except Exception as e:
-            raise e
-        return response
+    # def list(self, request, *args, **kwargs):
+    #     pass
+    #
+    # def retrieve(self, request, *args, **kwargs):
+    #     pass
 
     @action(detail=True)
     def download(self, request, *args, **kwargs):
@@ -57,6 +44,9 @@ class ReportsViewSet(mixins.ListModelMixin,
             with open(report_full_dir, 'w', encoding='utf-8') as file:
                 file.write(html)
 
+        # 获取文件流，返回给前端
+        # 创建一个生成器，获取文件流，每次获取的是文件字节数据
+
         response = StreamingHttpResponse(get_file_content(report_full_dir))
 
         html_file_name = escape_uri_path(name + '.html')
@@ -64,4 +54,6 @@ class ReportsViewSet(mixins.ListModelMixin,
         # 直接使用Response对象['响应头名称'] = '值'
         response['Content-Type'] = 'application/octet-stream'
         response['Content-Disposition'] = f"attachement; filename*=UTF-8''{html_file_name}"
+
+        # return StreamingHttpResponse(get_file_content(report_full_dir))
         return response

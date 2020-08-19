@@ -51,6 +51,7 @@ urlpatterns = [
     path('', include('envs.urls')),
     path('', include('interfaces.urls')),
     path('', include('projects.urls')),
+    path('', include('reports.urls')),
     path('', include('testcases.urls')),
     path('', include('testsuits.urls')),
     path('api/',include('rest_framework.urls')),

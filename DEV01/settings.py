@@ -280,3 +280,8 @@ JWT_AUTH = {
     # 指定前端传递token值的前缀
     'JWT_AUTH_HEADER_PREFIX': 'JWT',
 }
+
+# 在全局配置文件中定义变量，变量名要大写
+# 使用django.conf.settings 去调用该变量
+# 报告路径
+DEPORT_DIR = os.path.join(BASE_DIR,'reports')
