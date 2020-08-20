@@ -62,7 +62,7 @@ class InterfacesNamesSerializer(serializers.ModelSerializer):
 
 
 class InterfacesByProjectsIdSerializer(serializers.ModelSerializer):
-    interfaces = InterfacesNamesSerializer(many=True, read_only=True)
+    interface = InterfacesNamesSerializer(many=True, read_only=True)
 
     # projects_id = serializers.IntegerField(label='外键ID1', help_text='外键ID1',
     #                                        validators=[validators.UniqueValidator(queryset=Projects.objects.all(),
@@ -75,4 +75,4 @@ class InterfacesByProjectsIdSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Interfaces
-        fields = ("id", "name", "interfaces")
+        fields = ("id", "name", "interface")

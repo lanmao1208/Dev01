@@ -1,9 +1,11 @@
 from rest_framework import serializers
+from rest_framework import validators
+
 from .models import Projects
 from interfaces.models import Interfaces
-from debugtalks.models import DebugTalks
 from interfaces.serializers import InterfacesModelSerializer
 from utils import common
+from debugtalks.models import DebugTalks
 
 
 class InterfacesNamesModelSerializer(serializers.ModelSerializer):
@@ -21,17 +23,17 @@ class ProjectsModelSerializer(serializers.ModelSerializer):
 
         extra_kwargs = {
             'create_time': {
-                'read_only': True,
+                'read_only': False,
                 'format': common.datetime_fmt(),
             },
 
         }
 
-        def create(self, validated_data):
-            # 在创建项目时，同时创建一个空的debugtalk.py文件
-            project = super().create(validated_data)
-            DebugTalks.objects.create(project=project)
-            return project
+    def create(self, validated_data):
+        # 在创建项目时，同时创建一个空的debugtalk.py文件
+        project = super().create(validated_data)
+        DebugTalks.objects.create(project=project)
+        return project
 
 
 class ProjectsNamesModelSerializer(serializers.ModelSerializer):
@@ -42,7 +44,7 @@ class ProjectsNamesModelSerializer(serializers.ModelSerializer):
 
 
 class InterfacesByProjectIdModelSerializer(serializers.ModelSerializer):
-    interfaces = InterfacesNamesModelSerializer(many=True, read_only=True)
+    interface = InterfacesNamesModelSerializer(many=True, read_only=True)
 
     class Meta:
         model = Projects

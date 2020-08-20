@@ -34,6 +34,7 @@ class InterfacesViewSet(Currency_View_Class):
     queryset = Interfaces.objects.all()
     serializer_class = InterfacesModelSerializer
     permission_classes = [permissions.IsAuthenticated]
+    ordering_fields = ('id', 'name')
 
     def list(self, request, *args, **kwargs):
         """
@@ -45,17 +46,17 @@ class InterfacesViewSet(Currency_View_Class):
         :return:
         """
         response = super().list(self, request, *args, **kwargs)
-        dict_data = response.data["result"]
+        dict_data = response.data["results"]
         for item in dict_data:
             # 获取接口id
-            interfaces_id = item.get('id')
+            interface_id = item.get('id')
             # 用例总数
-            testcases_count = Testcases.objects.filter(interfaces_id=interfaces_id).count()
+            testcases_count = Testcases.objects.filter(interface_id=interface_id).count()
             # 配置总数
-            configures_count = Configures.objects.filter(interfaces_id=interfaces_id).count()
-            result_data = {"testcases": testcases_count, "configures": configures_count}
-            item.update(result_data)
-        response.data["result"] = dict_data
+            configures_count = Configures.objects.filter(interface_id=interface_id).count()
+            results_data = {"testcases": testcases_count, "configures": configures_count}
+            item.update(results_data)
+        response.data["results"] = dict_data
         return response
 
     @action(methods=['get'],detail=True)

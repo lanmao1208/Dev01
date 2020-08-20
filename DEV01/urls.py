@@ -46,7 +46,6 @@ urlpatterns = [
     # a.path函数的第二个参数为类视图名.as_view()
     # b.可以使用<url类型转化器:路径参数名>
     # c.int、path、uuid、slug等等
-    path('', include('configures.urls')),
     path('', include('debugtalks.urls')),
     path('', include('envs.urls')),
     path('', include('interfaces.urls')),

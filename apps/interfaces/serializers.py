@@ -1,8 +1,9 @@
 from rest_framework import serializers, validators
 from .models import Interfaces
+from configures.models import Configures
 from projects.models import Projects
 from testcases.serializers import TestcasesModelSerializer
-from configures.serializers import ConfiguresModelSerializer
+# from configures.serializers import ConfiguresModelSerializer
 from utils import common
 
 
@@ -10,8 +11,8 @@ from utils import common
 class InterfacesModelSerializer(serializers.ModelSerializer):
     # 因为project为外键字段，所以此地使用project or project_id都行
     project = serializers.StringRelatedField(help_text='所属项目名称', label='所属项目名称')
-    project_id = serializers.PrimaryKeyRelatedField(write_only=True,
-                                                    queryset=Projects.objects.all(help_text='所属项目ID', label='所属项目ID'))
+    project_id = serializers.PrimaryKeyRelatedField(write_only=True, help_text='所属项目ID', label='所属项目ID',
+                                                    queryset=Projects.objects.all())
 
     # project_id = serializers.IntegerField(write_only=True, validators=[])
 
@@ -23,7 +24,9 @@ class InterfacesModelSerializer(serializers.ModelSerializer):
                 'read_only': True,
                 'format': common.datetime_fmt()
             },
-            "name" : {[validators.UniqueValidator(queryset=model.objects.all(),message='项目名称不能重复')]}
+            "name": {
+                "validators": [validators.UniqueValidator(queryset=model.objects.all(), message='项目名称不能重复')]
+            }
         }
 
     def create(self, validated_data):
@@ -47,15 +50,15 @@ class TestcasesByInterfacesIdModelSerializer(serializers.ModelSerializer):
         fields = ("testcases",)
 
 
+class ConfiguresNamesModelSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Configures
+        fields = ('id', 'name')
+
+
 class ConfiguresByInterfacesIdModelSerializer(serializers.ModelSerializer):
-    configuers = ConfiguresModelSerializer(label='配置信息', help_text='配置信息', many=True)
+    configuers = ConfiguresNamesModelSerializer(label='配置信息', help_text='配置信息', many=True)
 
     class Meta:
         model = Interfaces
         fields = ("configuers",)
-
-
-class InterfacesNameModelSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Interfaces
-        fields = ("id", "name")
