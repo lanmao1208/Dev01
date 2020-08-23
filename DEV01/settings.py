@@ -285,3 +285,5 @@ JWT_AUTH = {
 # 使用django.conf.settings 去调用该变量
 # 报告路径
 REPORT_DIR = os.path.join(BASE_DIR, 'report')
+# yaml用例文件存放路径
+SUITES_DIR = os.path.join(BASE_DIR, 'suites')

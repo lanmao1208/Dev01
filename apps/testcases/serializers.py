@@ -4,15 +4,15 @@ from rest_framework import validators
 from testcases.models import Testcases
 from interfaces.models import Interfaces
 from DEV01 import validaters
-
+from utils import common, validates
 
 
 class InterfacesProjectsModelSerializer(serializers.ModelSerializer):
     project = serializers.StringRelatedField(label='所属项目名称', help_text='所属项目名称')
     pid = serializers.IntegerField(label='所属项目id', help_text='所属项目id', write_only=True,
-                                   validators=[validaters.project_id_bool])
+                                   validators=[validates.is_exised_project_id])
     iid = serializers.IntegerField(label='所属接口id', help_text='所属接口id', write_only=True,
-                                   validators=[validaters.interface_id_bool])
+                                   validators=[validates.is_exised_interface_id])
 
     class Meta:
         model = Interfaces
@@ -51,5 +51,13 @@ class TestcasesModelSerializer(serializers.ModelSerializer):
         validated_data["projects_id"] = pid
         return super().update(instance, validated_data)
 
+
+class TestcasesRunSerializer(serializers.ModelSerializer):
+    env_id = serializers.IntegerField(label='环境变量ID', help_text='环境变量ID',
+                                      write_only=True, validators=[validates.is_exised_env_id])
+
+    class Meta:
+        model = Testcases
+        fields = ('id', 'env_id')
 
 

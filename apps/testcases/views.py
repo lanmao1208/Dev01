@@ -1,34 +1,23 @@
 import json
+import os
+from datetime import datetime
 
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.response import Response
+from rest_framework.decorators import action
+from django.conf import settings
 
 from .models import Testcases
+from envs.models import Envs
 from interfaces.models import Interfaces
-from .serializers import TestcasesModelSerializer
+from . import serializers
+from utils import common,handle_datas
 
-
-def handle_param_type(value):
-    """
-    处理参数类型
-    :param value: 数据
-    :return: value数据的类型名
-    """
-    if isinstance(value, int):
-        param_type = "int"
-    elif isinstance(value, float):
-        param_type = "float"
-    elif isinstance(value, bool):
-        param_type = "boolean"
-    else:
-        param_type = "string"
-
-    return param_type
 
 
 class TestcasesViewSet(ModelViewSet):
     queryset = Testcases.objects.all()
-    serializer_class = TestcasesModelSerializer
+    serializer_class = serializers.TestcasesModelSerializer
 
     def retrieve(self, request, *args, **kwargs):
         """
@@ -53,16 +42,16 @@ class TestcasesViewSet(ModelViewSet):
         headers = [{"key": hkey, "value": hvalue} for hkey, hvalue in headers_item if headers_item is not None]
         # 处理form表单数据
         variables_item = request_datas.get('data')
-        variables = [{"key": vkey, "value": vvalue,"param_type": handle_param_type(vvalue)}for vkey,vvalue in variables_item.items() if variables_item.items() is not None]
+        variables = [{"key": vkey, "value": vvalue,"param_type": handle_datas.handle_param_type(vvalue)}for vkey,vvalue in variables_item.items() if variables_item.items() is not None]
         # 处理用例variables变量列表
         globalVar_item = testcase_request.get('test').get('variables')
         globalVar = [{"key": list(item)[0], "value": item.get(list(item)[0]),
-                      "param_type": handle_param_type(item.get(list(item)[0]))}
+                      "param_type": handle_datas.handle_param_type(item.get(list(item)[0]))}
                      for item in globalVar_item if globalVar_item is not None]
         # 处理用例的validate列表
         validate_item = testcase_request.get('test').get('validate')
         validate = [{"key": item.get("check"), "value": item.get("expected"), "comparator": item.get("comparator"),
-                     "param_type": handle_param_type(item.get("expected"))} for item in validate_item if
+                     "param_type": handle_datas.handle_param_type(item.get("expected"))} for item in validate_item if
                     validate_item is not None]
         # 处理extract数据
         extract_item = testcase_request.get('test').get('extract')
@@ -107,3 +96,28 @@ class TestcasesViewSet(ModelViewSet):
             "teardownHooks": teardownHooks,
         }
         return Response(datas)
+
+    @action(methods=['post'], detail=True)
+    def run(self, request, *args, **kwargs):
+        # 取出并构造参数
+        instance = self.get_object()
+        response = super().create(request, *args, **kwargs)
+        env_id = response.data.serializer.validated_data.get('env_id')
+        testcase_dir_path = os.path.join(settings.SUITES_DIR, datetime.strftime(datetime.now(), '%Y%m%d%H%M%S%f'))
+        # 创建一个以时间戳命名的路径
+        os.makedirs(testcase_dir_path)
+        env = Envs.objects.filter(id=env_id).first()
+        # 生成yaml用例文件
+        common.generate_testcase_file(instance, env, testcase_dir_path)
+        # 运行用例（生成报告）
+        common.run_testcase(instance, testcase_dir_path)
+
+    def get_serializer_class(self):
+        return serializers.TestcasesRunSerializer if self.action == 'run' else self.serializer_class
+
+    def perform_create(self, serializer):
+        # 重写父类的perform_create方法，使用run动作时不进行保存操作
+        if self.action == 'run':
+            pass
+        else:
+            serializer.save()
