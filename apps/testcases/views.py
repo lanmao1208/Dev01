@@ -7,6 +7,7 @@ from rest_framework.response import Response
 from rest_framework.decorators import action
 from django.conf import settings
 
+
 from .models import Testcases
 from envs.models import Envs
 from interfaces.models import Interfaces
@@ -105,7 +106,7 @@ class TestcasesViewSet(ModelViewSet):
         env_id = response.data.serializer.validated_data.get('env_id')
         testcase_dir_path = os.path.join(settings.SUITES_DIR, datetime.strftime(datetime.now(), '%Y%m%d%H%M%S%f'))
         # 创建一个以时间戳命名的路径
-        os.makedirs(testcase_dir_path)
+        os.mkdir(testcase_dir_path)
         env = Envs.objects.filter(id=env_id).first()
         # 生成yaml用例文件
         common.generate_testcase_file(instance, env, testcase_dir_path)

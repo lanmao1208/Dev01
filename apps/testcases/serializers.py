@@ -16,7 +16,13 @@ class InterfacesProjectsModelSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Interfaces
-        fields = ("name", "pid", "Iid", "project")
+        fields = ("name", "pid", "iid", "project")
+
+        extra_kwargs = {
+            'name': {
+                'read_only': True
+            }
+        }
 
     def validate(self, attrs):
         pid = attrs.get("pid")
@@ -24,6 +30,7 @@ class InterfacesProjectsModelSerializer(serializers.ModelSerializer):
         # 效验接口id和项目id是否匹配
         if not Interfaces.objects.filter(id=iid, project_id=pid).exists():
             raise serializers.ValidationError("接口id和项目id并未匹配")
+        return attrs
 
 
 class TestcasesModelSerializer(serializers.ModelSerializer):

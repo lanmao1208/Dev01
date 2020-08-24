@@ -1,4 +1,7 @@
 import json
+import os
+from datetime import datetime
+
 import logging
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import OrderingFilter
@@ -7,11 +10,16 @@ from rest_framework import viewsets
 from rest_framework.decorators import action
 from rest_framework import permissions
 from rest_framework.response import Response
+
 from .models import Projects
-# from utils.pagination import N
 from interfaces.models import Interfaces
 from testsuits.models import Testsuits
-from .serializers import ProjectsModelSerializer, ProjectsNamesModelSerializer, InterfacesByProjectIdModelSerializer
+from envs.models import Envs
+from testcases.models import Testcases
+from django.conf import settings
+from utils import common
+from .serializers import ProjectsModelSerializer, ProjectsNamesModelSerializer, InterfacesByProjectIdModelSerializer, \
+    ProjectsRunSerializer
 
 # 定义日志器用于记录日志
 logger = logging.getLogger('mytest')
@@ -60,7 +68,6 @@ class ProjectsViewSet(viewsets.ModelViewSet):
         response.data['results'] = data_list
         return response
 
-
     @action(methods=['get'], detail=False)
     def names(self, request, *args, **kwargs):
         return self.list(request, *args, **kwargs)
@@ -76,10 +83,48 @@ class ProjectsViewSet(viewsets.ModelViewSet):
         qs = self.retrieve(request, *args, **kwargs)
         return Response(qs.data['interfaces'])
 
+    @action(methods=['post'], detail=True)
+    def run(self, request, *args, **kwargs):
+        # 取出并构造参数
+        instance = self.get_object()
+        response = super().create(request, *args, **kwargs)
+        env_id = response.data.serializer.validated_data.get('env_id')
+        testcase_dir_path = os.path.join(settings.SUITES_DIR, datetime.strftime(datetime.now(), '%Y%m%d%H%M%S%f'))
+        # 创建一个以时间戳命名的路径
+        os.mkdir(testcase_dir_path)
+        env = Envs.objects.filter(id=env_id).first()
+        interfaces_qs = Interfaces.objects.filter(instance)
+        # 判断查询集对象是否为空
+        if not interfaces_qs.exists():
+            data = {
+                'ret': False,
+                'msg': '该项目下无接口存在，无法运行'
+            }
+            return Response(data,status=400)
+        # 遍历所有可运行用例，并转化为列表
+        runner_testcases_obj = []
+        for interfaces_obj in interfaces_qs:
+            testcase_qs = Testcases.objects.filter(interface=interfaces_obj)
+            if testcase_qs.exists():
+                runner_testcases_obj.extend(list(testcase_qs))
+        if len(runner_testcases_obj) == 0:
+            data = {
+                'ret': False,
+                'msg': '该项目下无用例存在，无法运行'
+            }
+            return Response(data,status=400)
+        for testcase_obj in runner_testcases_obj:
+            # 生成yaml用例文件
+            common.generate_testcase_file(testcase_obj, env, testcase_dir_path)
+        # 运行用例（生成报告）
+        common.run_testcase(instance, testcase_dir_path)
+
     def get_serializer_class(self):
         if self.action == 'names':
             return ProjectsNamesModelSerializer
         elif self.action == 'interfaces':
             return InterfacesByProjectIdModelSerializer
+        elif self.action == "run":
+            return ProjectsRunSerializer
         else:
             return self.serializer_class

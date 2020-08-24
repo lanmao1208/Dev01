@@ -53,6 +53,7 @@ urlpatterns = [
     path('', include('reports.urls')),
     path('', include('testcases.urls')),
     path('', include('testsuits.urls')),
+    path('',include('summary.urls')),
     path('api/',include('rest_framework.urls')),
     path('user/',include('user.urls')),
 ]

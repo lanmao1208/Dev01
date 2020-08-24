@@ -1,13 +1,19 @@
+import os
+import json
+from datetime import datetime
+
+from rest_framework.decorators import action
+from rest_framework import permissions
+from django.conf import settings
+
 import logging
+from rest_framework.response import Response
+from utils.currency_class import Currency_View_Class
+from utils import common
 from interfaces.models import Interfaces
 from .serializers import InterfacesModelSerializer,TestcasesByInterfacesIdModelSerializer,ConfiguresByInterfacesIdModelSerializer
-from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework.filters import OrderingFilter
-from utils.currency_class import Currency_View_Class
-from utils.pagination import MyPagination
-from rest_framework.decorators import action
-from rest_framework.response import Response
-from rest_framework import permissions
+from testcases.serializers import TestcasesRunSerializer
+from envs.models import Envs
 from testcases.models import Testcases
 from configures.models import Configures
 
@@ -79,10 +85,48 @@ class InterfacesViewSet(Currency_View_Class):
         # return response
         return self.currency_action_def(request, "configures",*args, **kwargs)
 
+    @action(methods=['post'], detail=True)
+    def run(self, request, *args, **kwargs):
+        # 取出并构造参数
+        instance = self.get_object()
+        response = super().create(request, *args, **kwargs)
+        env_id = response.data.serializer.validated_data.get('env_id')
+        testcase_dir_path = os.path.join(settings.SUITES_DIR, datetime.strftime(datetime.now(), '%Y%m%d%H%M%S%f'))
+        # 创建一个以时间戳命名的路径
+        os.mkdir(testcase_dir_path)
+        env = Envs.objects.filter(id=env_id).first()
+        interfaces_qs = Interfaces.objects.filter(instance)
+        runner_testcases_obj = []
+        testcase_qs = Testcases.objects.filter(interface=interfaces_qs)
+        if testcase_qs.exists():
+            runner_testcases_obj.extend(list(testcase_qs))
+        if len(runner_testcases_obj) == 0:
+            data = {
+                'ret': False,
+                'msg': '该项目下无用例存在，无法运行'
+            }
+            return Response(data, status=400)
+        for testcase_obj in runner_testcases_obj:
+            # 生成yaml用例文件
+            common.generate_testcase_file(testcase_obj, env, testcase_dir_path)
+        # 运行用例（生成报告）
+        common.run_testcase(instance, testcase_dir_path)
+
     def get_serializer_class(self):
         if self.action == 'testcases':
             return TestcasesByInterfacesIdModelSerializer
         elif self.action == 'configures':
             return ConfiguresByInterfacesIdModelSerializer
+        elif self.action == 'run':
+            return TestcasesRunSerializer
         else:
             return self.serializer_class
+
+    def perform_create(self, serializer):
+        # 重写父类的perform_create方法，使用run动作时不进行保存操作
+        if self.action == 'run':
+            pass
+        else:
+            serializer.save()
+
+

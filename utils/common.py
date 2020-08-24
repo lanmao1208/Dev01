@@ -15,6 +15,8 @@ from testcases.models import Testcases
 from reports.models import Reports
 
 
+login_name = None
+
 def create_report(runner, report_name=None):
     """
     生成报告方法
